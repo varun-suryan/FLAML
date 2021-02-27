@@ -1,4 +1,4 @@
-'''Require: pip install flaml[blendsearch,ray]
+'''Require: pip install -e .[blendsearch,ray, deeptables]
 pip install tensorflow deeptables[gpu]
 '''
 import time
@@ -6,10 +6,10 @@ import numpy as np
 from flaml import tune
 import pandas as pd
 from functools import partial
+import os 
+import time
+RANDOMSEED = 42
 
-DT_METRIC, MODE = 'log_loss', 'min'
-
-DT_loss_metric = 'categorical_crossentropy'
 try:
     import ray
     import flaml
@@ -21,9 +21,6 @@ except:
     
 import logging
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.FileHandler('test/tune_dt_para.log'))
-logger.setLevel(logging.INFO)
-
 
 def construct_dt_modelconfig(config:dict, y_train, objective_name):#->ModelConfig:
     # basic config of dt
@@ -80,30 +77,54 @@ def construct_dt_modelconfig(config:dict, y_train, objective_name):#->ModelConfi
 
     return dt_model_config
 
+def generate_resource_schedule(reduction_factor, lower, upper, log_max_min_ratio = 5):
+    resource_schedule = []
+    if log_max_min_ratio: 
+        r = max(int(upper/(reduction_factor**log_max_min_ratio)), lower)
+    else: r = lower
+    while r <= upper:
+        resource_schedule.append(r)
+        r *= reduction_factor
+    if not resource_schedule:
+        resource_schedule.append(upper)
+    else:
+        resource_schedule[-1] = upper
+    print('resource_schedule', resource_schedule)
+    return resource_schedule
+
+
+def add_res(log_file_name, *params):
+    # params =[time_used, eval_count, best_obj, best_config, choice, obj, eval_time, i_config]
+    file_save = open(log_file_name, 'a+')
+    line_info = '\t'.join(str(x) for x in params)
+    file_save.write(line_info)
+    file_save.write('\n')          
+
 def get_test_loss(estimator = None, model=None, X_test = None, y_test = None, 
                             metric = 'r2', labels = None):
-        from sklearn.metrics import mean_squared_error, r2_score, \
-            roc_auc_score, accuracy_score, mean_absolute_error, log_loss
-        if not estimator:
-            loss = np.Inf
-        else:
-            if 'roc_auc' == metric:
-                y_pred = estimator.predict_proba(X_test = X_test)
-                if y_pred.ndim>1 and y_pred.shape[1]>1:
-                    y_pred = y_pred[:,1]
-                loss = 1.0 - roc_auc_score(y_test, y_pred)
-            elif 'log_loss' == metric or 'categorical' in metric:
-                print('yes',estimator )
-                att_func = getattr(estimator, "predict_proba", None)
-                if callable(att_func): print('yes')
-                y_pred = estimator.predict_proba(X_test)
-                loss = log_loss(y_test, y_pred, labels=labels)
-            elif 'r2' == metric:
-                y_pred = estimator.predict(X_test)
-                loss = 1.0-r2_score(y_test, y_pred)
-        return loss
+    from sklearn.metrics import mean_squared_error, r2_score, \
+        roc_auc_score, accuracy_score, mean_absolute_error, log_loss
+    if not estimator:
+        loss = np.Inf
+    else:
+        if 'roc_auc' == metric:
+            y_pred = estimator.predict_proba(X_test = X_test)
+            if y_pred.ndim>1 and y_pred.shape[1]>1:
+                y_pred = y_pred[:,1]
+            loss = 1.0 - roc_auc_score(y_test, y_pred)
+        elif 'log_loss' == metric or 'categorical' in metric:
+            print('yes',estimator )
+            att_func = getattr(estimator, "predict_proba", None)
+            if callable(att_func): print('yes')
+            y_pred = estimator.predict_proba(X_test)
+            loss = log_loss(y_test, y_pred, labels=labels)
+        elif 'r2' == metric:
+            y_pred = estimator.predict(X_test)
+            loss = 1.0-r2_score(y_test, y_pred)
+    return loss
 
-def train_dt(config: dict, prune_attr: str, resource_schedule: list):
+def train_dt(config: dict, oml_dataset:str, start_time: float, prune_attr: str, 
+        resource_schedule: list, log_file_name: str):
     """ implement the traininig function of dt model
         reference: blendsearch.problem.DeepTables
     """
@@ -114,7 +135,6 @@ def train_dt(config: dict, prune_attr: str, resource_schedule: list):
                 X.shape[1]))])
         return X
 
-    oml_dataset = "shuttle"
     # get a multi-class dataset
     from sklearn.model_selection import train_test_split
     try:
@@ -125,6 +145,9 @@ def train_dt(config: dict, prune_attr: str, resource_schedule: list):
         from sklearn.datasets import load_wine
         X, y = load_wine(return_X_y=True)
         logger.info("failed to fetch oml dataset, dataset=wine")
+
+    #NOTE: only considering classification dataset
+    assert len(set(y)) >2, 'only considering classification dataset'
     objective_name = 'muti'
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33,
         random_state=42)
@@ -132,30 +155,45 @@ def train_dt(config: dict, prune_attr: str, resource_schedule: list):
     from deeptables.models.deeptable import DeepTable, ModelConfig
     from deeptables.models.deepnets import DCN, WideDeep, DeepFM
 
+    print('config', config)
     # clip 'rounds' according to the size of the data
     data_size = len(y_train)
     assert 'rounds' in config, 'rounds required'
-    clipped_rounds = max(min(round(1500000/data_size),config['rounds']), 10)
-    config['rounds'] = clipped_rounds
+    clipped_rounds = max(min(round(1500000/data_size),round(config['rounds'])), 10)
+    config['rounds'] = int(clipped_rounds)
     dt_model_config = construct_dt_modelconfig(config, y_train, objective_name='multi')
-
     dt = DeepTable(dt_model_config)
-    #TODO: check the fit API
     for epo in resource_schedule:
         log_batchsize = config.get('log_batchsize', 9)
         # train model 
+        eval_start_time = time.time()
         dt_model, _ = dt.fit(preprocess(X_train), y_train, verbose=0,
                 epochs=int(round(epo)), batch_size=1<<log_batchsize)
-        
+
         # evaluate model
+        DT_loss_metric = 'categorical_crossentropy'
         loss = get_test_loss(dt, dt_model, X_test, y_test, metric=DT_loss_metric)
 
-        # report loss
-        tune.report(prune_attr = epo, score=loss)
-        # TODO: for schedulers: option1: write a loop; option2: check whether there is a callback function in deeptable.
+        # write result
+        eval_time = time.time() - eval_start_time 
+        time_used = time.time()-start_time
+        # NOTE: these fields are missing
+        eval_count, best_obj, best_config, choice = None, None, None, None  # missing fields
+        obj = loss 
+        i_config = config
+        i_config[prune_attr] = epo
+        log_param = [time_used, eval_count, best_obj, best_config, choice, obj, eval_time, i_config]
+        add_res(log_file_name, log_param)
 
-#TODO: should we worry about the following error: the global search method raises error. Ignoring for this iteration.
-def _test_dt_parallel(method='BlendSearch'):
+        # report loss
+        tune.report(epochs=epo, loss=loss)
+        
+
+def _test_dt_parallel(time_budget_s= 120, n_gpu= 2, method='BlendSearch', run_index=0, \
+    oml_dataset = 'shuttle', log_dir_address = '/home/qiw/FLAML/logs/'):
+    metric = 'loss'
+    mode = 'min'
+    resources_per_trial = {"cpu":1, "gpu": 1}
     try:
         import ray
     except ImportError:
@@ -164,15 +202,18 @@ def _test_dt_parallel(method='BlendSearch'):
         from flaml import tune
     else:
         from ray import tune
+
+    # specify exp log file
+    if not os.path.isdir(log_dir_address): os.mkdir(log_dir_address)
+    exp_alias = 'dt_parallel_' + '_'.join(str(s) for s in [n_gpu, oml_dataset, time_budget_s, method, run_index])
+    log_file_name = log_dir_address + exp_alias + '.log'
+    open(log_file_name,"w")
+
+    # set random state
+    np.random.seed(RANDOMSEED)
     # specify the search space
-    # get the search space from the AutoML class: AutoML.search_space.
-    #TODO: need to check how to set data_size
-    data_size = 100
-    # early_stopping_rounds = max(min(round(1500000/data_size),150), 10)
     search_space = {
-        # 'log_epochs': tune.loguniform(1, 10),
-        # 'rounds': tune.lograndint(1,150), 
-        'rounds': tune.randint(1,150), 
+        'rounds': tune.qloguniform(1,150, 1),
         'net': tune.choice(['DCN', 'dnn_nets']),
         "learning_rate": tune.loguniform(1e-4, 3e-2),
         'auto_discrete': tune.choice([False, True]),
@@ -181,145 +222,159 @@ def _test_dt_parallel(method='BlendSearch'):
         'dropout': tune.uniform(0,0.5),
         'dense_dropout': tune.uniform(0,0.5),
         "log_batchsize": tune.randint(4, 10),        
-    }
-
+    }   
+    # specify the init config
     init_config = {
-        # 'log_epochs':1,
         'rounds': 10,
-        "learning_rate": 3e-4, #FIXME: how to set random init
-        'net': 'DCN',
-        'auto_discrete': False,
-        'apply_gbm_features': False,
-        'fixed_embedding_dim': False,
-         # 'auto_discrete': None,
-        # 'apply_gbm_features': None,
-        # 'fixed_embedding_dim': None,
+        'net': np.random.choice(['DCN', 'dnn_nets']),
+        "learning_rate": 3e-4, 
+        'auto_discrete': np.random.choice([False, True]),
+        'apply_gbm_features': np.random.choice([False, True]),
+        'fixed_embedding_dim': np.random.choice([False, True]),
         'dropout': 0.1,
         'dense_dropout': 0,
         "log_batchsize": 9,  
-        }
+    }
+
+    # specify pruning config
+    prune_attr='epochs'
     default_epochs = 2**9
-    max_gpu = 1
-    # specify prune attribute
-    for num_samples in [2]:
-        time_budget_s = 120 #None
-        for n_gpu in [max_gpu]:
-            start_time = time.time()
-            ray.init(num_cpus=1, num_gpus=n_gpu)
-            if 'BlendSearch' in method:
-                prune_attr='epochs'
-                resource_schedule = [default_epochs]
-                if 'ASHA' in method:
-                    prune_attr='epochs-ASHA'
-                    resource_schedule=  [2**i for i in range(1,5)]
-                # the default search_alg is BlendSearch in flaml 
-                # corresponding schedulers for BS are specified in flaml.tune.run
-                analysis = tune.run(
-                    partial(train_dt, prune_attr=prune_attr, resource_schedule=resource_schedule),
-                    init_config = init_config,
-                    # cat_hp_cost={
-                    #     "net": [2,1], #TODO: check the cat_hp_cost
-                    # },
-                    metric='score', 
-                    mode=MODE,
-                    prune_attr=prune_attr,
-                    max_resource=resource_schedule[-1],
-                    min_resource=resource_schedule[0],
-                    report_intermediate_result=True,
-                    # You can add "gpu": 0.1 to allocate GPUs
-                    resources_per_trial={"gpu": n_gpu},
-                    config=search_space, 
-                    local_dir='logs/',
-                    num_samples=num_samples*n_gpu, 
-                    time_budget_s=time_budget_s,
-                    use_ray=True)
-            else: 
-                algo=None
-                scheduler = None
-                if 'ASHA' == method:
-                    algo=None 
-                elif 'BOHB' == method:
-                    from ray.tune.schedulers import HyperBandForBOHB
-                    from ray.tune.suggest.bohb import TuneBOHB
-                    algo = TuneBOHB(max_concurrent=n_cpu)
-                    scheduler = HyperBandForBOHB(max_t=max_iter)
-                elif 'Optuna' == method:
-                    from ray.tune.suggest.optuna import OptunaSearch
-                    algo = OptunaSearch()
-                elif 'CFO' == method:
-                    from flaml import CFO
-                    #TODO: revise points to eval
-                    # algo = CFO(points_to_evaluate=[{
-                    #     "max_depth": 1,
-                    #     "min_child_weight": 3,
-                    # }], cat_hp_cost={
-                    #     "min_child_weight": [6, 3, 2],
-                    # })
-                    algo = None
+    min_epochs = 2**1
+    max_epochs = 2**10
+    reduction_factor_asha = 4
+    reduction_factor_hyperband = 3
+    start_time = time.time()
+    if 'ASHA' in method:
+        resource_schedule = generate_resource_schedule(reduction_factor_asha, 
+            min_epochs, max_epochs)
+    elif 'hyberband' in method or 'BOHB' in method:
+        resource_schedule=  generate_resource_schedule(reduction_factor_hyperband, 
+            min_epochs, max_epochs)
+    else: resource_schedule = [default_epochs]
+    min_resource = resource_schedule[0]
+    max_resource = resource_schedule[-1]
 
-                #TODO: check points_to_evaluate and init_config
-                
-                analysis = tune.run(
-                    partial(train_dt, resource_schedule=resource_schedule),
-                    metric='score', 
-                    mode=MODE,
-                    init_config = init_config,
-                    # You can add "gpu": 0.1 to allocate GPUs
-                    resources_per_trial={"gpu": n_gpu},
-                    config=search_space, local_dir='logs/',
-                    num_samples=num_samples*n_gpu, time_budget_s=time_budget_s,
-                    # scheduler=scheduler, 
-                    search_alg=algo)
-            ray.shutdown()
-    
-            best_trial = analysis.get_best_trial('score',MODE,"all")
-            # accuracy = 1. - best_trial.metric_analysis["eval-error"]["min"]
-            logloss = best_trial.metric_analysis['score'][MODE]
-            logger.info(f"method={method}")
-            logger.info(f"n_samples={num_samples*n_gpu}")
-            logger.info(f"time={time.time()-start_time}")
-            logger.info(f"Best model eval loss: {logloss:.4f}")
-            logger.info(f"Best model parameters: {best_trial.config}")
+    # create trainable function
+    trainable_func = partial(train_dt, oml_dataset=oml_dataset, start_time=start_time, prune_attr=prune_attr,
+    resource_schedule=resource_schedule, log_file_name=log_file_name)
 
-# def _test_distillbert_cfo():
-#     _test_distillbert('CFO')
+    ray.init(num_cpus=n_gpu, num_gpus=n_gpu)
+    if 'BlendSearch' in method:
+        # the default search_alg is BlendSearch in flaml 
+        # corresponding schedulers for BS are specified in flaml.tune.run
+        analysis = tune.run(
+            trainable_func,
+            init_config = init_config,
+            cat_hp_cost={
+                "net": [2,1],
+            },
+            metric=metric, 
+            mode=mode,
+            prune_attr=prune_attr,
+            max_resource=max_resource,
+            min_resource=min_resource,
+            report_intermediate_result=True,
+            resources_per_trial=resources_per_trial,
+            config=search_space, 
+            local_dir=log_dir_address,
+            num_samples=-1, 
+            time_budget_s=time_budget_s,
+            use_ray=True) 
+    else: 
+        if 'Optuna' in method:
+            from ray.tune.suggest.optuna import OptunaSearch
+            algo = OptunaSearch()
+        elif 'CFO' in method:
+            from flaml import CFO
+            algo = CFO(
+                metric=metric,
+                mode=mode,
+                space=search_space,
+                points_to_evaluate=[init_config], 
+                cat_hp_cost={
+                "net": [2,1],
+                    }
+                )
+        else: algo = None
 
+        if 'ASHA' in method:
+            from ray.tune.schedulers import ASHAScheduler
+            scheduler = ASHAScheduler(
+                time_attr=prune_attr,
+                max_t=max_resource,
+                grace_period=min_resource,
+                reduction_factor=reduction_factor_asha,
+                )
+        else: scheduler = None
 
-# def _test_distillbert_dragonfly():
-#     _test_distillbert('Dragonfly')
+        if 'BOHB' == method:
+            from ray.tune.schedulers import HyperBandForBOHB
+            from ray.tune.suggest.bohb import TuneBOHB
+            algo = TuneBOHB() 
+            scheduler = HyperBandForBOHB(
+                time_attr=prune_attr,
+                max_t=max_resource,
+                reduction_factor=reduction_factor_hyperband,
+                )
+        analysis = tune.run(
+            trainable_func,
+            metric=metric, 
+            mode=mode,
+            resources_per_trial=resources_per_trial,
+            config=search_space, 
+            local_dir=log_dir_address,
+            num_samples=-1, 
+            time_budget_s=time_budget_s,
+            scheduler=scheduler, 
+            search_alg=algo)
+    ray.shutdown()
 
-
-# def _test_distillbert_skopt():
-#     _test_distillbert('SkOpt')
-
-
-# def _test_distillbert_nevergrad():
-#     _test_distillbert('Nevergrad')
-
-
-# def _test_distillbert_zoopt():
-#     _test_distillbert('ZOOpt')
-
-
-# def _test_distillbert_ax():
-#     _test_distillbert('Ax')
-
-
-# def __test_distillbert_hyperopt():
-#     _test_distillbert('HyperOpt')
-
-
-# def _test_distillbert_optuna():
-#     _test_distillbert('Optuna')
-
-
-# def _test_distillbert_asha():
-#     _test_distillbert('ASHA')
-
-
-# def _test_distillbert_bohb():
-#     _test_distillbert('BOHB')
+    best_trial = analysis.get_best_trial(metric,mode,"all")
+    # accuracy = 1. - best_trial.metric_analysis["eval-error"]["min"]
+    logloss = best_trial.metric_analysis[metric][mode]
+    logger.info(f"method={method}")
+    logger.info(f"dataset={oml_dataset}")
+    logger.info(f"time={time.time()-start_time}")
+    logger.info(f"Best model eval loss: {logloss:.4f}")
+    logger.info(f"Best model parameters: {best_trial.config}")
 
 
 if __name__ == "__main__":
-    _test_dt_parallel(method='BlendSearch-ASHA')
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--time', metavar='time', type = float, 
+        default=60, help="time_budget")
+    parser.add_argument('-gpu', '--n_gpu', metavar='n_gpu', type = int, 
+        default=2, help="number of gpu")
+    parser.add_argument('-n', '--total_run_num', metavar='total_run_num', type= int , 
+        default= 1, help="The total_run_num")
+    parser.add_argument('-m', '--method_list', dest='method_list', nargs='*' , 
+        default= ['BlendSearch+ASHA', 'ASHA', 'Optuna+ASHA', 'CFO+ASHA'], help="The method list") #'BOHB',
+    parser.add_argument('-d', '--dataset_list', dest='dataset_list', nargs='*' , 
+        default= ['shuttle'], help="The dataset list") # ['cnae','shuttle', ] 
+#     #TODO: exp on 'cane' has error: 
+#     # File "/home/qiw/miniconda3/envs/py37/lib/python3.7/site-packages/sklearn/compose/_column_transformer.py", 
+#     # line 562, in transform  "Given feature/column names do not match the ones for the "
+    
+#     # NOTE: the following does not work
+#     # find venv/lib/python3.7/site-packages/deeptables/preprocessing/transformer.py
+#     # comment line 39:
+#     # y = y.argmax(axis=-1)
+    args = parser.parse_args()
+    time_budget_s = args.time
+    n_gpu = args.n_gpu
+    method_list = args.method_list
+    dataset_list = args.dataset_list
+    total_run_num = args.total_run_num
+    cwd = os.getcwd()
+    log_dir_address = cwd + '/logs/dt/'
+    logger.addHandler(logging.FileHandler(log_dir_address+'tune_dt_para.log'))
+    logger.setLevel(logging.INFO)
+    for oml_dataset in dataset_list:
+        for method in method_list:
+            for run_index in range(total_run_num):
+                _test_dt_parallel(time_budget_s= time_budget_s, n_gpu= n_gpu, method=method, \
+                    run_index=run_index, oml_dataset=oml_dataset, log_dir_address=log_dir_address)
+
+# pip install -e .[blendsearch,ray, deeptables]
+# python test/test_dt_parallel.py -n 2 -t 3600
