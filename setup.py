@@ -59,7 +59,12 @@ setuptools.setup(
         "azureml": [
             "azureml-mlflow"
         ],
+        "deeptables": [#'deeptables==0.1.11',
+        'tensorflow==2.2.0', 'deeptables[gpu]'
+        ],
+        "bohb": ['CondfigSpace', 'hpbandster']
     },
+        
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
