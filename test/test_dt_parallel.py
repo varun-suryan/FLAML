@@ -2,6 +2,9 @@
 pip install flaml[blendsearch,ray]
 pip install tensorflow==2.2.0 deeptables[gpu]
 # pip install CondfigSpace hpbandster
+# Find /lib/python3.7/site-packages/deeptables/preprocessing/transformer.py
+#     # comment line 40:
+#     # y = y.argmax(axis=-1)
 '''
 import time
 import numpy as np
