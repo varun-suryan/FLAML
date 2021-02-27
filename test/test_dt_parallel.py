@@ -1,5 +1,7 @@
-'''Require: pip install -e .[blendsearch,ray, deeptables]
-pip install tensorflow deeptables[gpu]
+'''Require: 
+pip install flaml[blendsearch,ray]
+pip install tensorflow==2.2.0 deeptables[gpu]
+# pip install CondfigSpace hpbandster
 '''
 import time
 import numpy as np
@@ -17,7 +19,7 @@ try:
     from deeptables.models.deeptable import DeepTable, ModelConfig
     from deeptables.models.deepnets import DCN, WideDeep, DeepFM
 except:
-    print("pip install deeptables flaml[blendsearch,ray]")
+    print("pip install tensorflow==2.2.0 deeptables[gpu] flaml[blendsearch,ray]")
     
 import logging
 logger = logging.getLogger(__name__)
@@ -376,5 +378,5 @@ if __name__ == "__main__":
                 _test_dt_parallel(time_budget_s= time_budget_s, n_gpu= n_gpu, method=method, \
                     run_index=run_index, oml_dataset=oml_dataset, log_dir_address=log_dir_address)
 
-# pip install -e .[blendsearch,ray, deeptables]
+
 # python test/test_dt_parallel.py -n 2 -t 3600
