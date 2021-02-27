@@ -1,4 +1,5 @@
 '''Require: 
+conda create -n py37 python=3.7
 pip install flaml[blendsearch,ray]
 pip install tensorflow==2.2.0 deeptables[gpu]
 # pip install CondfigSpace hpbandster
@@ -209,7 +210,6 @@ def _test_dt_parallel(time_budget_s= 120, n_gpu= 2, method='BlendSearch', run_in
         from ray import tune
 
     # specify exp log file
-    if not os.path.isdir(log_dir_address): os.mkdir(log_dir_address)
     exp_alias = 'dt_parallel_' + '_'.join(str(s) for s in [n_gpu, oml_dataset, time_budget_s, method, run_index])
     log_file_name = log_dir_address + exp_alias + '.log'
     open(log_file_name,"w")
@@ -373,6 +373,7 @@ if __name__ == "__main__":
     total_run_num = args.total_run_num
     cwd = os.getcwd()
     log_dir_address = cwd + '/logs/dt/'
+    if not os.path.isdir(log_dir_address): os.mkdir(log_dir_address)
     logger.addHandler(logging.FileHandler(log_dir_address+'tune_dt_para.log'))
     logger.setLevel(logging.INFO)
     for oml_dataset in dataset_list:
