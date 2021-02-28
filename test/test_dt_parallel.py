@@ -195,11 +195,11 @@ def train_dt(config: dict, oml_dataset:str, start_time: float, prune_attr: str,
         tune.report(epochs=epo, loss=loss)
         
 
-def _test_dt_parallel(time_budget_s= 120, n_gpu= 2, n_cpu_per_trial=1, method='BlendSearch', run_index=0, \
+def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method='BlendSearch', run_index=0, \
     oml_dataset = 'shuttle', log_dir_address = '/home/qiw/FLAML/logs/'):
     metric = 'loss'
     mode = 'min'
-    resources_per_trial = {"cpu":n_cpu_per_trial, "gpu": n_cpu_per_trial}
+    resources_per_trial = {"cpu":n_per_trial_pu, "gpu": n_per_trial_pu}
     try:
         import ray
     except ImportError:
@@ -210,7 +210,7 @@ def _test_dt_parallel(time_budget_s= 120, n_gpu= 2, n_cpu_per_trial=1, method='B
         from ray import tune
 
     # specify exp log file
-    exp_alias = 'dt_parallel_' + '_'.join(str(s) for s in [n_gpu, n_cpu_per_trial, oml_dataset, time_budget_s, method, run_index])
+    exp_alias = 'dt_parallel_' + '_'.join(str(s) for s in [n_total_pu, n_per_trial_pu, oml_dataset, time_budget_s, method, run_index])
     log_file_name = log_dir_address + exp_alias + '.log'
     open(log_file_name,"w")
 
@@ -231,13 +231,6 @@ def _test_dt_parallel(time_budget_s= 120, n_gpu= 2, n_cpu_per_trial=1, method='B
     # specify the init config
     init_config = {
         'rounds': 10,
-        # 'net': np.random.choice(['DCN', 'dnn_nets']),
-        # "learning_rate": 3e-4, 
-        # 'auto_discrete': np.random.choice([False, True]),
-        # 'apply_gbm_features': np.random.choice([False, True]),
-        # 'fixed_embedding_dim': np.random.choice([False, True]),
-        # 'dropout': 0.1,
-        # 'dense_dropout': 0,
         "log_batchsize": 9,  
     }
 
@@ -263,7 +256,7 @@ def _test_dt_parallel(time_budget_s= 120, n_gpu= 2, n_cpu_per_trial=1, method='B
     trainable_func = partial(train_dt, oml_dataset=oml_dataset, start_time=start_time, prune_attr=prune_attr,
     resource_schedule=resource_schedule, log_file_name=log_file_name)
 
-    ray.init(num_cpus=n_gpu, num_gpus=n_gpu)
+    ray.init(num_cpus=n_total_pu, num_gpus=n_total_pu)
     if 'BlendSearch' in method:
         # the default search_alg is BlendSearch in flaml 
         # corresponding schedulers for BS are specified in flaml.tune.run
@@ -349,10 +342,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--time', metavar='time', type = float, 
         default=60, help="time_budget")
-    parser.add_argument('-gpu', '--n_gpu', metavar='n_gpu', type = int, 
-        default=26, help="number of gpu")
-    parser.add_argument('-cpu', '--n_cpu_per_trial', metavar='n_cpu_per_trial', type = int, 
-        default=1, help="number of cpu per trial")
+    parser.add_argument('-total_pu', '--n_total_pu', metavar='n_total_pu', type = int, 
+        default=26, help="total number of gpu or cpu")
+    parser.add_argument('-trial_pu', '--n_per_trial_pu', metavar='n_per_trial_pu', type = int, 
+        default=1, help="number of gpu or cpu per trial")
     parser.add_argument('-n', '--total_run_num', metavar='total_run_num', type= int , 
         default= 1, help="The total_run_num")
     parser.add_argument('-m', '--method_list', dest='method_list', nargs='*' , 
@@ -369,8 +362,9 @@ if __name__ == "__main__":
 #     # y = y.argmax(axis=-1)
     args = parser.parse_args()
     time_budget_s = args.time
-    n_gpu = args.n_gpu
-    n_cpu_per_trial = args.n_cpu_per_trial
+    # NOTE: do not differentiate gpu and cpu when configuring the resource (whether pu is gpu or cpu depends your machine)
+    n_total_pu = args.n_total_pu
+    n_per_trial_pu = args.n_per_trial_pu
     method_list = args.method_list
     dataset_list = args.dataset_list
     total_run_num = args.total_run_num
@@ -382,11 +376,12 @@ if __name__ == "__main__":
     for oml_dataset in dataset_list:
         for method in method_list:
             for run_index in range(total_run_num):
-                _test_dt_parallel(time_budget_s= time_budget_s, n_gpu= n_gpu, n_cpu_per_trial=n_cpu_per_trial, \
+                _test_dt_parallel(time_budget_s= time_budget_s, n_total_pu= n_total_pu, n_per_trial_pu=n_per_trial_pu, \
                     method=method, run_index=run_index, oml_dataset=oml_dataset, log_dir_address=log_dir_address)
 
 
-# python test/test_dt_parallel.py -n 5 -t 3600 -gpu 4
+# python test/test_dt_parallel.py -n 5 -t 3600 -total_pu 4
 
-# python test/test_dt_parallel.py -n 1 -t 60 -cpu 4
-# python test/test_dt_parallel.py -n 1 -t 300 -cpu 2 -m 'CFO+ASHA'
+# python test/test_dt_parallel.py -n 1 -t 60 -trial_pu 4
+# python test/test_dt_parallel.py -n 1 -t 60 -trial_pu 4 -total_pu 12
+# python test/test_dt_parallel.py -n 1 -t 300 -trial_pu 2 -m 'CFO+ASHA'
