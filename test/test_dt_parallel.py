@@ -195,11 +195,11 @@ def train_dt(config: dict, oml_dataset:str, start_time: float, prune_attr: str,
         tune.report(epochs=epo, loss=loss)
         
 
-def _test_dt_parallel(time_budget_s= 120, n_gpu= 2, method='BlendSearch', run_index=0, \
+def _test_dt_parallel(time_budget_s= 120, n_gpu= 2, n_cpu_per_trial=1, method='BlendSearch', run_index=0, \
     oml_dataset = 'shuttle', log_dir_address = '/home/qiw/FLAML/logs/'):
     metric = 'loss'
     mode = 'min'
-    resources_per_trial = {"cpu":1, "gpu": 1}
+    resources_per_trial = {"cpu":n_cpu_per_trial, "gpu": n_cpu_per_trial}
     try:
         import ray
     except ImportError:
@@ -210,7 +210,7 @@ def _test_dt_parallel(time_budget_s= 120, n_gpu= 2, method='BlendSearch', run_in
         from ray import tune
 
     # specify exp log file
-    exp_alias = 'dt_parallel_' + '_'.join(str(s) for s in [n_gpu, oml_dataset, time_budget_s, method, run_index])
+    exp_alias = 'dt_parallel_' + '_'.join(str(s) for s in [n_gpu, n_cpu_per_trial, oml_dataset, time_budget_s, method, run_index])
     log_file_name = log_dir_address + exp_alias + '.log'
     open(log_file_name,"w")
 
@@ -350,7 +350,9 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--time', metavar='time', type = float, 
         default=60, help="time_budget")
     parser.add_argument('-gpu', '--n_gpu', metavar='n_gpu', type = int, 
-        default=2, help="number of gpu")
+        default=26, help="number of gpu")
+    parser.add_argument('-cpu', '--n_cpu_per_trial', metavar='n_cpu_per_trial', type = int, 
+        default=1, help="number of cpu per trial")
     parser.add_argument('-n', '--total_run_num', metavar='total_run_num', type= int , 
         default= 1, help="The total_run_num")
     parser.add_argument('-m', '--method_list', dest='method_list', nargs='*' , 
@@ -368,6 +370,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     time_budget_s = args.time
     n_gpu = args.n_gpu
+    n_cpu_per_trial = args.n_cpu_per_trial
     method_list = args.method_list
     dataset_list = args.dataset_list
     total_run_num = args.total_run_num
@@ -379,8 +382,11 @@ if __name__ == "__main__":
     for oml_dataset in dataset_list:
         for method in method_list:
             for run_index in range(total_run_num):
-                _test_dt_parallel(time_budget_s= time_budget_s, n_gpu= n_gpu, method=method, \
-                    run_index=run_index, oml_dataset=oml_dataset, log_dir_address=log_dir_address)
+                _test_dt_parallel(time_budget_s= time_budget_s, n_gpu= n_gpu, n_cpu_per_trial=n_cpu_per_trial, \
+                    method=method, run_index=run_index, oml_dataset=oml_dataset, log_dir_address=log_dir_address)
 
 
-# python test/test_dt_parallel.py -n 2 -t 3600
+# python test/test_dt_parallel.py -n 5 -t 3600 -gpu 4
+
+# python test/test_dt_parallel.py -n 1 -t 60 -cpu 4
+# python test/test_dt_parallel.py -n 1 -t 300 -cpu 2 -m 'CFO+ASHA'
