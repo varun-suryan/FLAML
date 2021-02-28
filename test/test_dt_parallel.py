@@ -231,13 +231,13 @@ def _test_dt_parallel(time_budget_s= 120, n_gpu= 2, n_cpu_per_trial=1, method='B
     # specify the init config
     init_config = {
         'rounds': 10,
-        'net': np.random.choice(['DCN', 'dnn_nets']),
-        "learning_rate": 3e-4, 
-        'auto_discrete': np.random.choice([False, True]),
-        'apply_gbm_features': np.random.choice([False, True]),
-        'fixed_embedding_dim': np.random.choice([False, True]),
-        'dropout': 0.1,
-        'dense_dropout': 0,
+        # 'net': np.random.choice(['DCN', 'dnn_nets']),
+        # "learning_rate": 3e-4, 
+        # 'auto_discrete': np.random.choice([False, True]),
+        # 'apply_gbm_features': np.random.choice([False, True]),
+        # 'fixed_embedding_dim': np.random.choice([False, True]),
+        # 'dropout': 0.1,
+        # 'dense_dropout': 0,
         "log_batchsize": 9,  
     }
 

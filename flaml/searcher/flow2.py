@@ -250,7 +250,7 @@ class FLOW2(Searcher):
                 if key not in self._unordered_cat_hp:
                     if upper and lower:
                         u, l = upper[key], lower[key]
-                        gauss_std = u-l
+                        gauss_std = u-l or self.STEPSIZE
                         # allowed bound
                         u += self.STEPSIZE
                         l -= self.STEPSIZE
@@ -266,6 +266,7 @@ class FLOW2(Searcher):
             config = self.denormalize(normalized)
             self._reset_times += 1
         else:
+            if partial_config == self.init_config: self._reset_times += 1
             # first time init_config, or other configs, take as is
             config = partial_config.copy()
         config = flatten_dict(config)
