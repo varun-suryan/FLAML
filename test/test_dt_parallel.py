@@ -28,6 +28,30 @@ except:
 import logging
 logger = logging.getLogger(__name__)
 
+def get_lc_from_log(log_file_name):
+    x = []
+    y = [] #minimizing 
+    if os.path.isfile(log_file_name):
+        f = open(log_file_name, 'r')
+        best_obj = np.inf
+        for line in f.readlines():
+            line_seg = line.strip('\n[]').split(',')
+            total_time = float(line_seg[0])
+            obj = float(line_seg[5])
+            if obj < best_obj: best_obj = obj
+            x.append(total_time)
+            y.append(best_obj)
+    else:
+        print('File does not exist')
+    assert len(x) == len(y) 
+    return x, y
+    
+
+def plot_lc(log_file_name, y_min=0, y_max=0.5, name=''):
+    x, y = get_lc_from_log(log_file_name)
+    plt.step(x, y, where='post', label=name)
+    plt.ylim([y_min,y_max])
+
 def construct_dt_modelconfig(config:dict, y_train, objective_name):#->ModelConfig:
     # basic config of dt
     dropout = config.get('dropout', 0)
@@ -196,7 +220,7 @@ def train_dt(config: dict, oml_dataset:str, start_time: float, prune_attr: str,
         
 
 def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method='BlendSearch', run_index=0, \
-    oml_dataset = 'shuttle', log_dir_address = '/home/qiw/FLAML/logs/'):
+    oml_dataset = 'shuttle', log_dir_address = '/home/qiw/FLAML/logs/', log_file_name='/home/qiw/FLAML/logs/example.log'):
     metric = 'loss'
     mode = 'min'
     resources_per_trial = {"cpu":n_per_trial_pu, "gpu": n_per_trial_pu}
@@ -210,10 +234,7 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
         from ray import tune
 
     # specify exp log file
-    exp_alias = 'dt_parallel_' + '_'.join(str(s) for s in [n_total_pu, n_per_trial_pu, oml_dataset, time_budget_s, method, run_index])
-    log_file_name = log_dir_address + exp_alias + '.log'
     open(log_file_name,"w")
-
     # set random state
     np.random.seed(RANDOMSEED)
     # specify the search space
@@ -338,6 +359,7 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
 
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--time', metavar='time', type = float, 
@@ -352,6 +374,8 @@ if __name__ == "__main__":
         default= ['BlendSearch+ASHA', 'ASHA', 'Optuna+ASHA', 'CFO+ASHA'], help="The method list") #'BOHB',
     parser.add_argument('-d', '--dataset_list', dest='dataset_list', nargs='*' , 
         default= ['shuttle'], help="The dataset list") # ['cnae','shuttle', ] 
+    parser.add_argument('-plot_only', '--plot_only', action='store_true',
+                        help='whether to only generate plots.') 
 #     #TODO: exp on 'cane' has error: 
 #     # File "/home/qiw/miniconda3/envs/py37/lib/python3.7/site-packages/sklearn/compose/_column_transformer.py", 
 #     # line 562, in transform  "Given feature/column names do not match the ones for the "
@@ -373,15 +397,25 @@ if __name__ == "__main__":
     if not os.path.isdir(log_dir_address): os.mkdir(log_dir_address)
     logger.addHandler(logging.FileHandler(log_dir_address+'tune_dt_para.log'))
     logger.setLevel(logging.INFO)
+    
     for oml_dataset in dataset_list:
         for method in method_list:
             for run_index in range(total_run_num):
-                _test_dt_parallel(time_budget_s= time_budget_s, n_total_pu= n_total_pu, n_per_trial_pu=n_per_trial_pu, \
-                    method=method, run_index=run_index, oml_dataset=oml_dataset, log_dir_address=log_dir_address)
-
+                exp_alias = 'dt_parallel_' + '_'.join(str(s) for s in [n_total_pu, n_per_trial_pu, oml_dataset, time_budget_s, method, run_index])
+                log_file_name = log_dir_address + exp_alias + '.log'
+                if args.plot_only:
+                    plot_lc(log_file_name, y_min=0,y_max=0.1, name=method)
+                else:
+                    _test_dt_parallel(time_budget_s= time_budget_s, n_total_pu= n_total_pu, n_per_trial_pu=n_per_trial_pu, \
+                        method=method, run_index=run_index, oml_dataset=oml_dataset, log_dir_address=log_dir_address, log_file_name=log_file_name)
+        
+        fig_alias = 'LC_dt_parallel_lc' + '_'.join(str(s) for s in [n_total_pu, n_per_trial_pu, oml_dataset, time_budget_s, run_index])
+        fig_name = log_dir_address + fig_alias + '.pdf'
+        plt.legend()
+        plt.savefig(fig_name)
 
 # python test/test_dt_parallel.py -n 5 -t 3600 -total_pu 4
 
-# python test/test_dt_parallel.py -n 1 -t 60 -trial_pu 4
+# python test/test_dt_parallel.py -n 1 -t 60 -trial_pu 4 -m 'BlendSearch+ASHA' -plot_only
 # python test/test_dt_parallel.py -n 1 -t 60 -trial_pu 4 -total_pu 12
 # python test/test_dt_parallel.py -n 1 -t 300 -trial_pu 2 -m 'CFO+ASHA'
