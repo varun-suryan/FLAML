@@ -264,11 +264,10 @@ class FLOW2(Searcher):
                     normalized[key] = max(l, min(u, normalized[key] + delta))
             # use best config for unordered cat choice
             config = self.denormalize(normalized)
-            self._reset_times += 1
         else:
-            if partial_config == self.init_config: self._reset_times += 1
             # first time init_config, or other configs, take as is
             config = partial_config.copy()
+        if partial_config == self.init_config: self._reset_times += 1
         config = flatten_dict(config)
         for key, value in self.space.items():
             if key not in config:
@@ -430,7 +429,7 @@ class FLOW2(Searcher):
             obj = result.get(self._metric)
             if obj: 
                 obj *= self.metric_op
-                if obj < self.best_obj:
+                if self.best_obj is None or obj < self.best_obj:
                     self.best_obj, self.best_config = obj, self._configs[
                         trial_id]
                     self.incumbent = self.normalize(self.best_config)
@@ -441,7 +440,8 @@ class FLOW2(Searcher):
                     self._cost_complete4incumbent = 0
                     self._num_allowed4incumbent = 2 * self.dim
                     self._proposed_by.clear()
-                    if self._K > 0:
+                    if self._K > 0: 
+                        # self._oldK must have been set when self._K>0
                         self.step *= np.sqrt(self._K/self._oldK)
                     if self.step > self.step_ub: self.step = self.step_ub
                     self._iter_best_config = self.trial_count
@@ -478,7 +478,7 @@ class FLOW2(Searcher):
             obj = result.get(self._metric)
             if obj: 
                 obj *= self.metric_op
-                if obj < self.best_obj:
+                if self.best_obj is None or obj < self.best_obj:
                     self.best_obj = obj
                     config = self._configs[trial_id]
                     if self.best_config != config:
