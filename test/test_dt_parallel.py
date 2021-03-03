@@ -14,7 +14,7 @@ import pandas as pd
 from functools import partial
 import os 
 import time
-RANDOMSEED = 42
+RANDOMSEED = 1024
 
 try:
     import ray
@@ -42,6 +42,7 @@ def get_lc_from_log(log_file_name):
             x.append(total_time)
             y.append(best_obj)
     else:
+        print('log_file_name', log_file_name)
         print('File does not exist')
     assert len(x) == len(y) 
     return x, y
@@ -51,6 +52,7 @@ def plot_lc(log_file_name, y_min=0, y_max=0.5, name=''):
     x, y = get_lc_from_log(log_file_name)
     plt.step(x, y, where='post', label=name)
     plt.ylim([y_min,y_max])
+    plt.yscale('log')
 
 def construct_dt_modelconfig(config:dict, y_train, objective_name):#->ModelConfig:
     # basic config of dt
@@ -93,7 +95,7 @@ def construct_dt_modelconfig(config:dict, y_train, objective_name):#->ModelConfi
         nets = [net]
     else: nets = net
     from tensorflow.keras.optimizers import Adam
-    assert 'rounds' in config, 'rounds required'
+    # assert 'rounds' in config, 'rounds required'
     assert 'dense_dropout' in config, 'dense_dropout required' 
     dt_model_config = ModelConfig(nets=nets, earlystopping_patience=config[
                 "rounds"], dense_dropout=config["dense_dropout"], 
@@ -177,23 +179,30 @@ def train_dt(config: dict, oml_dataset:str, start_time: float, prune_attr: str,
         logger.info("failed to fetch oml dataset, dataset=wine")
 
     #NOTE: only considering classification dataset
-    assert len(set(y)) >2, 'only considering classification dataset'
-    objective_name = 'muti'
+    # assert len(set(y)) >2, 'only considering classification dataset'
+    if len(set(y)) >2: 
+        objective_name = 'multi'
+    else: objective_name = 'binary'
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33,
         random_state=42)
     # setup deeptable learner
     from deeptables.models.deeptable import DeepTable, ModelConfig
     from deeptables.models.deepnets import DCN, WideDeep, DeepFM
 
-    print('config', config)
     # clip 'rounds' according to the size of the data
     data_size = len(y_train)
-    assert 'rounds' in config, 'rounds required'
-    clipped_rounds = max(min(round(1500000/data_size),round(config['rounds'])), 10)
-    config['rounds'] = int(clipped_rounds)
-    dt_model_config = construct_dt_modelconfig(config, y_train, objective_name='multi')
-    dt = DeepTable(dt_model_config)
+    if prune_attr in config: resource_schedule = [config[prune_attr]]
+    config = config.copy()
     for epo in resource_schedule:
+        if 'rounds' not in config:
+            # assert 'epochs' in config
+            config['rounds'] = int(round(epo))
+        else:
+            # assert 'rounds' in config, 'rounds required'
+            clipped_rounds = max(min(round(1500000/data_size),round(config['rounds'])), 10)
+            config['rounds'] = int(clipped_rounds)
+        dt_model_config = construct_dt_modelconfig(config, y_train, objective_name=objective_name)
+        dt = DeepTable(dt_model_config)
         log_batchsize = config.get('log_batchsize', 9)
         # train model 
         eval_start_time = time.time()
@@ -228,18 +237,18 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
         import ray
     except ImportError:
         return
-    if 'BlendSearch' in method:
-        from flaml import tune
-    else:
-        from ray import tune
-
+    # if 'BlendSearch' in method:
+    #     from flaml import tune
+    # else:
+    #     from ray import tune
+    from ray import tune
     # specify exp log file
     open(log_file_name,"w")
     # set random state
-    np.random.seed(RANDOMSEED)
+    # np.random.seed(RANDOMSEED)
     # specify the search space
     search_space = {
-        'rounds': tune.qloguniform(1,150, 1),
+        'rounds': tune.qloguniform(10,150, 1),
         'net': tune.choice(['DCN', 'dnn_nets']),
         "learning_rate": tune.loguniform(1e-4, 3e-2),
         'auto_discrete': tune.choice([False, True]),
@@ -247,12 +256,13 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
         'fixed_embedding_dim': tune.choice([False, True]),
         'dropout': tune.uniform(0,0.5),
         'dense_dropout': tune.uniform(0,0.5),
-        "log_batchsize": tune.randint(4, 10),        
+        # "log_batchsize": tune.randint(4, 10),   
+        "log_batchsize": 8,     
     }   
     # specify the init config
     init_config = {
         'rounds': 10,
-        "log_batchsize": 9,  
+        # "log_batchsize": 9,  
     }
 
     # specify pruning config
@@ -263,13 +273,23 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
     reduction_factor_asha = 4
     reduction_factor_hyperband = 3
     start_time = time.time()
+    report_intermediate_result = True
     if 'ASHA' in method:
         resource_schedule = generate_resource_schedule(reduction_factor_asha, 
             min_epochs, max_epochs)
     elif 'hyberband' in method or 'BOHB' in method:
         resource_schedule=  generate_resource_schedule(reduction_factor_hyperband, 
             min_epochs, max_epochs)
-    else: resource_schedule = [default_epochs]
+    else: 
+        resource_schedule = [default_epochs]
+        # if no pruner, add `epochs` as part of the search space
+        search_space['epochs'] =  tune.loguniform(2**1,2**10)  
+        # TODO: should we add 'epochs' as part of the init_config?
+        init_config['epochs'] = 2**1
+        # report_intermediate_result = False
+
+        # search_space['epochs'] =  2**10
+
     min_resource = resource_schedule[0]
     max_resource = resource_schedule[-1]
 
@@ -278,7 +298,7 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
     resource_schedule=resource_schedule, log_file_name=log_file_name)
 
     ray.init(num_cpus=n_total_pu, num_gpus=n_total_pu)
-    if 'BlendSearch' in method:
+    if 'BlendSearch' in method and False:
         # the default search_alg is BlendSearch in flaml 
         # corresponding schedulers for BS are specified in flaml.tune.run
         analysis = tune.run(
@@ -292,7 +312,7 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
             prune_attr=prune_attr,
             max_resource=max_resource,
             min_resource=min_resource,
-            report_intermediate_result=True,
+            report_intermediate_result=report_intermediate_result,
             resources_per_trial=resources_per_trial,
             config=search_space, 
             local_dir=log_dir_address,
@@ -300,9 +320,13 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
             time_budget_s=time_budget_s,
             use_ray=True) 
     else: 
+        algo = None
+        scheduler = None
         if 'Optuna' in method:
             from ray.tune.suggest.optuna import OptunaSearch
-            algo = OptunaSearch()
+            import optuna
+            sampler = optuna.samplers.TPESampler(seed=RANDOMSEED+int(run_index))
+            algo = OptunaSearch(sampler=sampler)
         elif 'CFO' in method:
             from flaml import CFO
             algo = CFO(
@@ -314,7 +338,19 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
                 "net": [2,1],
                     }
                 )
-        else: algo = None
+        # 'BlendSearch+Optuna',  'BlendSearch'
+        if 'BlendSearch' in method:
+            from flaml import BlendSearch
+            algo = BlendSearch(
+                metric=metric,
+                mode=mode,
+                space=search_space,
+                points_to_evaluate=[init_config], 
+                cat_hp_cost={
+                "net": [2,1],
+                },
+                global_search_alg=algo,
+                )
 
         if 'ASHA' in method:
             from ray.tune.schedulers import ASHAScheduler
@@ -324,7 +360,7 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
                 grace_period=min_resource,
                 reduction_factor=reduction_factor_asha,
                 )
-        else: scheduler = None
+        # else: scheduler = None
 
         if 'BOHB' == method:
             from ray.tune.schedulers import HyperBandForBOHB
@@ -368,12 +404,17 @@ if __name__ == "__main__":
         default=26, help="total number of gpu or cpu")
     parser.add_argument('-trial_pu', '--n_per_trial_pu', metavar='n_per_trial_pu', type = int, 
         default=1, help="number of gpu or cpu per trial")
-    parser.add_argument('-n', '--total_run_num', metavar='total_run_num', type= int , 
-        default= 1, help="The total_run_num")
+    parser.add_argument('-r', '--run_indexes', dest='run_indexes', nargs='*' , 
+        default= [0], help="The list of run indexes")
     parser.add_argument('-m', '--method_list', dest='method_list', nargs='*' , 
-        default= ['BlendSearch+ASHA', 'ASHA', 'Optuna+ASHA', 'CFO+ASHA'], help="The method list") #'BOHB',
+        default= ['BlendSearch+Optuna', 'Optuna', 'BlendSearch+Optuna+ASHA',   'Optuna+ASHA',], help="The method list") #'BOHB',
+    # 1. verify whether should we fix #epo or add #epo in search space
+    # 2. run sequential exp (use setting according to 1): ['BlendSearch+Optuna', 'Optuna', 'CFO'] 
+    # para: 
+    # 1. verify ['BlendSearch+Optuna', 'BlendSearch+Optuna+ASHA', ]
+    # ['BlendSearch+Optuna', 'Optuna', 'BlendSearch+Optuna+ASHA',   'ASHA',  'Optuna+ASHA', 'BOHB',]
     parser.add_argument('-d', '--dataset_list', dest='dataset_list', nargs='*' , 
-        default= ['shuttle'], help="The dataset list") # ['cnae','shuttle', ] 
+        default= ['vehicle'], help="The dataset list") # ['cnae','shuttle', ] 
     parser.add_argument('-plot_only', '--plot_only', action='store_true',
                         help='whether to only generate plots.') 
 #     #TODO: exp on 'cane' has error: 
@@ -391,7 +432,7 @@ if __name__ == "__main__":
     n_per_trial_pu = args.n_per_trial_pu
     method_list = args.method_list
     dataset_list = args.dataset_list
-    total_run_num = args.total_run_num
+    run_indexes = args.run_indexes
     cwd = os.getcwd()
     log_dir_address = cwd + '/logs/dt/'
     if not os.path.isdir(log_dir_address): os.mkdir(log_dir_address)
@@ -400,11 +441,11 @@ if __name__ == "__main__":
     
     for oml_dataset in dataset_list:
         for method in method_list:
-            for run_index in range(total_run_num):
+            for run_index in run_indexes:
                 exp_alias = 'dt_parallel_' + '_'.join(str(s) for s in [n_total_pu, n_per_trial_pu, oml_dataset, time_budget_s, method, run_index])
                 log_file_name = log_dir_address + exp_alias + '.log'
                 if args.plot_only:
-                    plot_lc(log_file_name, y_min=0,y_max=0.1, name=method)
+                    plot_lc(log_file_name, y_min=1e-3,y_max=0.5, name=method)
                 else:
                     _test_dt_parallel(time_budget_s= time_budget_s, n_total_pu= n_total_pu, n_per_trial_pu=n_per_trial_pu, \
                         method=method, run_index=run_index, oml_dataset=oml_dataset, log_dir_address=log_dir_address, log_file_name=log_file_name)
