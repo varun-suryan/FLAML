@@ -151,4 +151,4 @@ catboost_info
 notebook/*.pkl
 notebook/.azureml
 mlruns
-/logs/*
+logs
