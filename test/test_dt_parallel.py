@@ -34,24 +34,108 @@ def get_lc_from_log(log_file_name):
     if os.path.isfile(log_file_name):
         f = open(log_file_name, 'r')
         best_obj = np.inf
+        total_time = 0
         for line in f.readlines():
             line_seg = line.strip('\n[]').split(',')
             total_time = float(line_seg[0])
             obj = float(line_seg[5])
-            if obj < best_obj: best_obj = obj
-            x.append(total_time)
-            y.append(best_obj)
+            if obj < best_obj: 
+                best_obj = obj
+                x.append(total_time)
+                y.append(best_obj)
+        x.append(total_time)
+        y.append(best_obj)
     else:
         print('log_file_name', log_file_name)
         print('File does not exist')
     assert len(x) == len(y) 
     return x, y
     
+# discretize curve_dic
+def discretize_learning_curves(self, time_budget, curve_dic):
+    # curve_dic: key: method name, value: list of multiple run
+    # each run is a list of tuples run_0 = [ (time, loss) ]
 
+    self.discretized_curve = {}
+    for method, curve_folds in curve_dic.items():
+        discretized_curve_folds = []
+        for curve in curve_folds: # curve in each fold
+            # discretize the time domain into intervals of 1s
+            discretized_curve = []
+            pos = 0
+            # discretized_obj = np.iinfo(int).max
+            for discretized_t in range(int(time_budget) + 1): # 3600 or 14400
+                discretized_obj = np.iinfo(int).max
+                while pos < len(curve) and curve[pos][1] <= discretized_t:
+                    obj, t, i = curve[pos]
+                    discretized_obj = obj
+                    pos += 1
+                if discretized_obj != np.iinfo(int).max:
+                    discretized_curve.append((discretized_obj, discretized_t, -1))
+            if len(discretized_curve) == 0: discretized_curve.append((discretized_obj, discretized_t, -1))
+            discretized_curve_folds.append(discretized_curve)   
+        self.discretized_curve[method] = discretized_curve_folds
+    #print (self.discretized_curve)
+
+    
 def plot_lc(log_file_name, y_min=0, y_max=0.5, name=''):
-    x, y = get_lc_from_log(log_file_name)
-    plt.step(x, y, where='post', label=name)
-    plt.ylim([y_min,y_max])
+    x_list, y_list = get_lc_from_log(log_file_name)
+    plt.step(x_list, y_list, where='post', label=name)
+    # plt.ylim([y_min,y_max])
+    plt.yscale('log')
+
+    print('plot lc')
+
+def get_agg_lc_from_file(log_file_name_alias, method_alias, index_list=list(range(1,10))):
+    log_file_list = []
+    list_x_list = []
+    list_y_list = []
+    for index in index_list:
+        log_file_name = log_file_name_alias + '_' + str(index) + '.log'
+        try:
+            x_list, y_list = get_lc_from_log(log_file_name)
+            list_x_list.append(x_list)
+            list_y_list.append(y_list)
+        except:
+            print('Fail to get lc from log')
+    
+    plot_agg_lc(list_x_list, list_y_list, method_alias= method_alias, y_max=1,)
+
+def plot_agg_lc(list_x_list, list_y_list, y_max, method_alias=''):
+
+    def get_x_y_from_index(current_index, x_list, y_list, y_max):
+        if current_index ==0:
+            current_index_x, current_index_y =  x_list[current_index], y_max
+        else: 
+            current_index_x, current_index_y = x_list[current_index], y_list[current_index-1]
+        return current_index_x, current_index_y
+
+    import itertools
+    all_x_list = list(itertools.chain.from_iterable(list_x_list))
+    all_x_list.sort()
+    all_y_list = []
+    for fold_index, y_list in enumerate(list_y_list):
+        if len(y_list) == 0:
+            continue
+        all_y_list_fold = []
+        x_list = list_x_list[fold_index]
+        current_index = 0
+        
+        for x in all_x_list:
+            current_index_x, best_y_before_current_x = get_x_y_from_index(current_index, x_list, y_list, y_max)
+            if x < current_index_x:
+                all_y_list_fold.append(best_y_before_current_x)
+            else: 
+                all_y_list_fold.append(y_list[current_index])
+                if current_index < len(y_list)-1:
+                    current_index +=1
+        all_y_list.append(all_y_list_fold)
+    all_y_list_arr = np.array(all_y_list)
+    all_y_list_mean = np.mean(all_y_list_arr, axis=0)
+    all_y_list_std = np.std(all_y_list_arr, axis=0)
+
+    plt.plot(all_x_list, all_y_list_mean, label = method_alias)
+    plt.fill_between(all_x_list, all_y_list_mean - all_y_list_std, all_y_list_mean + all_y_list_std, alpha=0.4)
     plt.yscale('log')
 
 def construct_dt_modelconfig(config:dict, y_train, objective_name):#->ModelConfig:
@@ -107,7 +191,7 @@ def construct_dt_modelconfig(config:dict, y_train, objective_name):#->ModelConfi
                 optimizer=Adam(learning_rate=learning_rate, clipvalue=100),
                 metrics=metrics, monitor_metric=monitor)
 
-    return dt_model_config
+    return dt_model_config, metrics[0]
 
 def generate_resource_schedule(reduction_factor, lower, upper, log_max_min_ratio = 5):
     resource_schedule = []
@@ -134,13 +218,15 @@ def add_res(log_file_name, *params):
 
 def get_test_loss(estimator = None, model=None, X_test = None, y_test = None, 
                             metric = 'r2', labels = None):
+    metric = metric.lower()
     from sklearn.metrics import mean_squared_error, r2_score, \
         roc_auc_score, accuracy_score, mean_absolute_error, log_loss
     if not estimator:
         loss = np.Inf
     else:
-        if 'roc_auc' == metric:
-            y_pred = estimator.predict_proba(X_test = X_test)
+        # if 'roc_auc' == metric:
+        if 'auc' in metric:
+            y_pred = estimator.predict_proba(X_test)
             if y_pred.ndim>1 and y_pred.shape[1]>1:
                 y_pred = y_pred[:,1]
             loss = 1.0 - roc_auc_score(y_test, y_pred)
@@ -183,6 +269,7 @@ def train_dt(config: dict, oml_dataset:str, start_time: float, prune_attr: str,
     if len(set(y)) >2: 
         objective_name = 'multi'
     else: objective_name = 'binary'
+    # objective_name = 'multi'
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33,
         random_state=42)
     # setup deeptable learner
@@ -201,7 +288,7 @@ def train_dt(config: dict, oml_dataset:str, start_time: float, prune_attr: str,
             # assert 'rounds' in config, 'rounds required'
             clipped_rounds = max(min(round(1500000/data_size),round(config['rounds'])), 10)
             config['rounds'] = int(clipped_rounds)
-        dt_model_config = construct_dt_modelconfig(config, y_train, objective_name=objective_name)
+        dt_model_config, dt_metric = construct_dt_modelconfig(config, y_train, objective_name=objective_name)
         dt = DeepTable(dt_model_config)
         log_batchsize = config.get('log_batchsize', 9)
         # train model 
@@ -210,8 +297,8 @@ def train_dt(config: dict, oml_dataset:str, start_time: float, prune_attr: str,
                 epochs=int(round(epo)), batch_size=1<<log_batchsize)
 
         # evaluate model
-        DT_loss_metric = 'categorical_crossentropy'
-        loss = get_test_loss(dt, dt_model, X_test, y_test, metric=DT_loss_metric)
+        # DT_loss_metric = 'categorical_crossentropy'
+        loss = get_test_loss(dt, dt_model, X_test, y_test, metric=dt_metric)
 
         # write result
         eval_time = time.time() - eval_start_time 
@@ -232,7 +319,7 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
     oml_dataset = 'shuttle', log_dir_address = '/home/qiw/FLAML/logs/', log_file_name='/home/qiw/FLAML/logs/example.log'):
     metric = 'loss'
     mode = 'min'
-    resources_per_trial = {"cpu":n_per_trial_pu, "gpu": n_per_trial_pu}
+    resources_per_trial = {"cpu":n_per_trial_pu, "gpu":0 } #n_per_trial_pu
     try:
         import ray
     except ImportError:
@@ -285,10 +372,10 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
         # if no pruner, add `epochs` as part of the search space
         search_space['epochs'] =  tune.loguniform(2**1,2**10)  
         # TODO: should we add 'epochs' as part of the init_config?
-        init_config['epochs'] = 2**1
+        # init_config['epochs'] = 2**1
         # report_intermediate_result = False
 
-        # search_space['epochs'] =  2**10
+        search_space['epochs'] =  2**10
 
     min_resource = resource_schedule[0]
     max_resource = resource_schedule[-1]
@@ -297,7 +384,7 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
     trainable_func = partial(train_dt, oml_dataset=oml_dataset, start_time=start_time, prune_attr=prune_attr,
     resource_schedule=resource_schedule, log_file_name=log_file_name)
 
-    ray.init(num_cpus=n_total_pu, num_gpus=n_total_pu)
+    ray.init(num_cpus=n_total_pu, num_gpus=0) #n_total_pu
     if 'BlendSearch' in method and False:
         # the default search_alg is BlendSearch in flaml 
         # corresponding schedulers for BS are specified in flaml.tune.run
@@ -341,10 +428,11 @@ def _test_dt_parallel(time_budget_s= 120, n_total_pu=4, n_per_trial_pu=1, method
         # 'BlendSearch+Optuna',  'BlendSearch'
         if 'BlendSearch' in method:
             from flaml import BlendSearch
+
             algo = BlendSearch(
-                metric=metric,
-                mode=mode,
-                space=search_space,
+                # metric=metric,
+                # mode=mode,
+                # space=search_space,
                 points_to_evaluate=[init_config], 
                 cat_hp_cost={
                 "net": [2,1],
@@ -417,6 +505,8 @@ if __name__ == "__main__":
         default= ['vehicle'], help="The dataset list") # ['cnae','shuttle', ] 
     parser.add_argument('-plot_only', '--plot_only', action='store_true',
                         help='whether to only generate plots.') 
+    parser.add_argument('-agg', '--agg', action='store_true',
+                        help='whether to only agg lc.')
 #     #TODO: exp on 'cane' has error: 
 #     # File "/home/qiw/miniconda3/envs/py37/lib/python3.7/site-packages/sklearn/compose/_column_transformer.py", 
 #     # line 562, in transform  "Given feature/column names do not match the ones for the "
@@ -441,16 +531,23 @@ if __name__ == "__main__":
     
     for oml_dataset in dataset_list:
         for method in method_list:
+            exp_alias = 'dt_parallel_' + '_'.join(str(s) for s in [n_total_pu, n_per_trial_pu, oml_dataset, time_budget_s, method])
+            if args.plot_only and args.agg:
+                log_file_name_alias =  log_dir_address + exp_alias
+                get_agg_lc_from_file(log_file_name_alias, method_alias=method)
             for run_index in run_indexes:
-                exp_alias = 'dt_parallel_' + '_'.join(str(s) for s in [n_total_pu, n_per_trial_pu, oml_dataset, time_budget_s, method, run_index])
-                log_file_name = log_dir_address + exp_alias + '.log'
+                exp_run_alias = exp_alias + '_' + run_index
+                log_file_name = log_dir_address + exp_run_alias + '.log'
                 if args.plot_only:
-                    plot_lc(log_file_name, y_min=1e-3,y_max=0.5, name=method)
+                    if not args.agg: plot_lc(log_file_name,  name=method) #y_min=1e-1,y_max=0.5,
+                    else: pass
                 else:
                     _test_dt_parallel(time_budget_s= time_budget_s, n_total_pu= n_total_pu, n_per_trial_pu=n_per_trial_pu, \
                         method=method, run_index=run_index, oml_dataset=oml_dataset, log_dir_address=log_dir_address, log_file_name=log_file_name)
-        
-        fig_alias = 'LC_dt_parallel_lc' + '_'.join(str(s) for s in [n_total_pu, n_per_trial_pu, oml_dataset, time_budget_s, run_index])
+        if args.agg:
+            fig_alias = 'LC_dt_parallel_lc' + '_'.join(str(s) for s in [n_total_pu, n_per_trial_pu, oml_dataset, time_budget_s])
+        else:
+            fig_alias = 'LC_dt_parallel_lc' + '_'.join(str(s) for s in [n_total_pu, n_per_trial_pu, oml_dataset, time_budget_s, run_index])
         fig_name = log_dir_address + fig_alias + '.pdf'
         plt.legend()
         plt.savefig(fig_name)
