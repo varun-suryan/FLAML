@@ -40,7 +40,8 @@ class BlendSearch(Searcher):
                  reduction_factor: Optional[float] = None,
                  resources_per_trial: Optional[dict] = None,
                  global_search_alg: Optional[Searcher] = None,
-                 mem_size = None):
+                 mem_size = None, 
+                 ls_seed = 20):
         '''Constructor
 
         Args:
@@ -100,7 +101,7 @@ class BlendSearch(Searcher):
         else:
             self._gs = None
         self._ls = LocalSearch(init_config, metric, mode, cat_hp_cost, space,
-         prune_attr, min_resource, max_resource, reduction_factor)
+         prune_attr, min_resource, max_resource, reduction_factor, ls_seed)
         self._resources_per_trial = resources_per_trial
         self._mem_size = mem_size
         self._mem_threshold = resources_per_trial.get(
