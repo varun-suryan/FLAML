@@ -229,10 +229,16 @@ class AutoML(Problem):
 
     class LGBM_CFO(LGBMEstimator):
 
+        memory_budget = 80*1024**3
 
-        def __init__(self, objective_name = 'binary', n_jobs=1, **params):
-            super().__init__(objective_name, n_jobs, **params)
+        def __init__(self, task='binary', n_jobs=1, **params):
+            super().__init__(task, n_jobs, **params)
             self.params["seed"] = 9999999
+
+        def _fit(self, X_train, y_train, **kwargs):    
+            if self.size(self.params) > self.memory_budget: 
+                return 0
+            else: return super()._fit(X_train, y_train, **kwargs)
 
     
     class LGBM_CFO_Large(LGBM_CFO):
@@ -305,26 +311,33 @@ class AutoML(Problem):
             }
 
 
-    def __init__(self, task='binary:logistic', n_jobs=1, **params):
-        super().__init__(task, n_jobs, **params)
-        # Default: ‘regression’ for LGBMRegressor, 
-        # ‘binary’ or ‘multiclass’ for LGBMClassifier
-        self.params = {
-            "n_estimators": self.params["n_estimators"],
-            "num_leaves": self.params.get('num_leaves'),
-            'objective': self.params.get("objective"),
-            'n_jobs': n_jobs,
-            'learning_rate': params["learning_rate"],
-            "min_data_in_leaf": int(round(params["min_data_in_leaf"])),
-        }
+        def __init__(self, task='binary', n_jobs=1, **params):
+            super().__init__(task, n_jobs, **params)
+            # Default: ‘regression’ for LGBMRegressor, 
+            # ‘binary’ or ‘multiclass’ for LGBMClassifier
+            self.params = {
+                "n_estimators": self.params["n_estimators"],
+                "num_leaves": self.params.get('num_leaves'),
+                'objective': self.params.get("objective"),
+                'n_jobs': n_jobs,
+                'learning_rate': params["learning_rate"],
+                "min_data_in_leaf": int(round(params["min_data_in_leaf"])),
+            }
 
 
     class XGB_CFO(XGBoostSklearnEstimator):
 
 
-        def __init__(self, objective_name = 'binary', n_jobs = 1, **params):
-            super().__init__(objective_name, n_jobs, **params)
+        memory_budget = 80*1024**3
+
+        def __init__(self, task='binary', n_jobs=1, **params):
+            super().__init__(task, n_jobs, **params)
             self.params["seed"] = 9999999
+
+        def _fit(self, X_train, y_train, **kwargs):    
+            if self.size(self.params) > self.memory_budget: 
+                return 0
+            else: return super()._fit(X_train, y_train, **kwargs)
 
     
     class XGB_CFO_Large(XGB_CFO):
@@ -373,15 +386,15 @@ class AutoML(Problem):
             }
 
 
-    class XGB_BlendSearch(XGBoostSklearnEstimator):
+    class XGB_BlendSearch(XGB_CFO):
 
 
-        def __init__(self, objective_name = 'binary', n_jobs = 1,
+        def __init__(self, task = 'binary', n_jobs = 1,
          n_estimators = 4, max_leaves = 4, subsample = 1.0, 
          min_child_weight = 1, learning_rate = 0.1, reg_lambda = 1.0, 
          reg_alpha = 0.0,  colsample_bylevel = 1.0, colsample_bytree = 1.0, 
          tree_method = 'hist', booster = 'gbtree', **params):
-            super().__init__(objective_name, n_jobs)
+            super().__init__(task, n_jobs)
             self.params['max_depth'] = 0
             self.params = {
             "n_estimators": int(round(n_estimators)),
@@ -502,11 +515,11 @@ class AutoML(Problem):
             }
 
 
-    class XGB_HPOLib(XGBoostSklearnEstimator):
+    class XGB_HPOLib(XGB_CFO):
 
 
-        def __init__(self, objective_name = 'binary', n_jobs = 1, **params):
-            super().__init__(objective_name, n_jobs)
+        def __init__(self, task = 'binary', n_jobs = 1, **params):
+            super().__init__(task, n_jobs)
             self.params = {
             "n_estimators": int(round(params["n_estimators"])),
             'max_depth': int(round(params["max_depth"])),
@@ -895,7 +908,7 @@ class AutoML(Problem):
         objective_name = self.objective
         metric = self.metric[objective_name]
         # print('config', config)
-        estimator = self.estimator(**config, objective_name = objective_name,
+        estimator = self.estimator(**config, task=objective_name,
          n_jobs=self.n_jobs)
         if self.resampling_strategy == 'cv':
             total_val_loss, valid_folder_num = 0, 0 

@@ -72,11 +72,11 @@ class BaseEstimator:
 
     def _fit(self, X_train, y_train, **kwargs):    
 
-        curent_time = time.time()
+        current_time = time.time()
         X_train = self._preprocess(X_train)
         model = self.estimator_class(**self.params)
         model.fit(X_train, y_train, **kwargs)
-        train_time = time.time() - curent_time
+        train_time = time.time() - current_time
         self._model = model
         return train_time
 
@@ -239,7 +239,7 @@ class LGBMEstimator(BaseEstimator):
         else: objective = 'regression'
         self.params = {
             "n_estimators": int(round(n_estimators)),
-            "num_leaves":  params.get('num_leaves', int(round(max_leaves))),
+            "max_leaves":  params.get('max_leaves', int(round(max_leaves))),
             'objective': params.get("objective", objective),
             'n_jobs': n_jobs,
             'learning_rate': float(learning_rate),
