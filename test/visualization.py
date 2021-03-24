@@ -4,7 +4,7 @@ import os
 import json
 
 
-def get_lc_from_log(log_file_name):
+def get_lc_from_log(log_file_name, budget=np.inf):
     x = []
     y = [] #minimizing 
     if os.path.isfile(log_file_name):
@@ -13,6 +13,7 @@ def get_lc_from_log(log_file_name):
         with open(log_file_name) as f:
             for line in f:
                 record = json.loads(line)
+                if float(record['total_search_time']) > budget: break
                 total_time = float(record['total_search_time'])
                 obj = float(record['obj'])
                 if obj < best_obj: 
@@ -125,7 +126,7 @@ def log_file_name(problem, dataset, method, budget, run):
     return f'logs/{problem}/{problem}_1_1_{dataset}_{budget}_{method}_{run}.log'
 
 
-def agg_final_result(problems, datasets, methods, budget, run):
+def agg_final_result(problems, datasets, methods, budget, run, time=np.inf):
     '''aggregate the final results for problems * datasets * methods
     
     Returns:
@@ -146,7 +147,7 @@ blood | (0.2, 1900, BS) | (0.3, 109, CFO) | (0.4, 800, Optuna) | xgb_blendsearch
             for method in methods:
                 key = (j, i)
                 x, y = get_lc_from_log(log_file_name(
-                    problem, dataset, method, budget, run))
+                    problem, dataset, method, budget, run), time)
                 if len(y)>0: 
                     result = results.get(key, [])
                     if not result: results[key] = result                    
@@ -170,7 +171,7 @@ blood | (0.2, 1900, BS) | (0.3, 109, CFO) | (0.4, 800, Optuna) | xgb_blendsearch
     return agg_results
 
 
-def final_result(problem, datasets, methods, budget, run):
+def final_result(problem, datasets, methods, budget, run, time=np.inf):
     '''compare the final results for problem on each dataset across methods
     
     Returns:
@@ -190,7 +191,7 @@ def final_result(problem, datasets, methods, budget, run):
     for row_id, dataset in enumerate(datasets):
         for col_id, method in enumerate(methods):
             x, y = get_lc_from_log(log_file_name(
-                problem, dataset, method, budget, run))
+                problem, dataset, method, budget, run), time)
             if len(y)>0: 
                 agg_results.iloc[row_id, col_id] = (y[-1],x[y.index(y[-1])])
     best_obj = agg_results.min(axis=1)
@@ -205,31 +206,113 @@ def final_result(problem, datasets, methods, budget, run):
 
 
 def test_agg_final_result():
-    print(agg_final_result(['xgb_blendsearch', 'xgb_cfo', 'xgb_hpolib'],
-        ['Australian', 'blood', 'car', 'credit', 'kc1', 'kr', 'phoneme', 'segment'], 
+    # print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large', 'lgbm_mlnet'],
+    #     ['Australian', 'blood', 'kr'], 
+    #     ['BlendSearch+Optuna',],
+    #     3600.0, 0))
+    # print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large'],
+    #     ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
+    #      'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine',
+    #      'riccardo', 'higgs', 'fabert', 'cnae'], 
+    #     ['BlendSearch+Optuna',],
+    #     14400.0, 0, 3600))
+    # print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large'],
+    #     ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
+    #      'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine',
+    #      'riccardo', 'higgs', 'fabert', 'cnae'], 
+    #     ['BlendSearch+Optuna',],
+    #     14400.0, 0))
+
+    print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large', 'lgbm_mlnet'],
+        ['Australian', 'blood', 'kr'], 
         ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
         3600.0, 0))
-    print(agg_final_result(['xgb_blendsearch', 'xgb_cfo', 'xgb_hpolib'],
-        ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine',], 
+    print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large', 'lgbm_mlnet'],
+        ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
+         'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine',
+         'riccardo', 'higgs', 'fabert', 'cnae'], 
+        ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+        14400.0, 0, 3600))
+    print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large', 'lgbm_mlnet'],
+        ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
+         'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine',
+         'riccardo', 'higgs', 'fabert', 'cnae'], 
         ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
         14400.0, 0))
-    print(agg_final_result(['xgb_blendsearch', 'xgb_cfo', 'xgb_hpolib'],
-        ['guillermo', 'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle',
-        'jasmine', 'riccardo', 'higgs', 'fabert', 'cnae', ], 
-        ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
-        14400.0, 0))
+    # print(agg_final_result(
+    #     ['xgb_blendsearch_large', 'xgb_cfo_large'],# 'xgb_blendsearch', 'xgb_cfo', 'xgb_hpolib'],
+    #     ['christine', 'jasmine', 'KDDCup09', 'numerai28'], 
+    #     # ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine',], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     14400.0, 0))
+    # print(agg_final_result(['xgb_blendsearch', 'xgb_cfo', 'xgb_hpolib'],
+    #     ['Australian', 'blood', 'car', 'credit', 'kc1', 'kr', 'phoneme', 'segment'], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     3600.0, 0))
+    # print(agg_final_result(['xgb_blendsearch', 'xgb_cfo', 'xgb_hpolib'],
+    #     ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine',], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     14400.0, 0))
+    # print(agg_final_result(['xgb_blendsearch', 'xgb_cfo', 'xgb_hpolib'],
+    #     ['guillermo', 'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle',
+    #     'jasmine', 'riccardo', 'higgs', 'fabert', 'cnae', ], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     14400.0, 0))
 
 
 def test_final_result():
-    print('xgb_cfo')
-    print(final_result('xgb_cfo',
-        ['Australian', 'blood', 'car', 'credit', 'kc1', 'kr', 'phoneme', 'segment'], 
+    # print("lgbm_cfo_large")
+    # print(final_result('lgbm_cfo_large',
+    #     ['Australian', 'blood', 'kr'], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     3600.0, 0))
+    # print(final_result('lgbm_cfo_large',
+    #     ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
+    #      'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine'], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     14400.0, 0))
+    print("lgbm_cfo_large, 1h")
+    print(final_result('lgbm_cfo_large',
+        ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
+         'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine'], 
+        ['BlendSearch+Optuna', 'CFO', 'Optuna'],
+        14400.0, 0, 3600))
+    print(final_result('lgbm_cfo_large',
+        ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
+         'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine'], 
         ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
-        3600.0, 0))
-    print(final_result('xgb_cfo',
-        ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine',], 
-        ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
-        14400.0, 0))
+        14400.0, 0, 3600))        
+    # print("lgbm_cfo, 1h")
+    # print(final_result('lgbm_cfo',
+    #     ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
+    #      'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine'], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     14400.0, 0, 3600))
+    # print(final_result('lgbm_cfo',
+    #     ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
+    #      'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine'], 
+    #     ['BlendSearch+Optuna', 'CFO', 'Optuna'],
+    #     14400.0, 0, 3600))
+    # print("lgbm_cfo, 10m")
+    # print(final_result('lgbm_cfo',
+    #     ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
+    #      'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine'], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     14400.0, 0, 600))
+    # print(final_result('lgbm_cfo',
+    #     ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
+    #      'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine'], 
+    #     ['BlendSearch+Optuna', 'CFO',],
+    #     14400.0, 0, 600))
+    # print('xgb_cfo')
+    # print(final_result('xgb_cfo',
+    #     ['Australian', 'blood', 'car', 'credit', 'kc1', 'kr', 'phoneme', 'segment'], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     3600.0, 0))
+    # print(final_result('xgb_cfo',
+    #     ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine',], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     14400.0, 0))
 
 
 if __name__ == "__main__":

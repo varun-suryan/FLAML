@@ -258,7 +258,7 @@ class AutoML(Problem):
                 },
                 'min_child_weight': {
                     'domain': tune.loguniform(lower=1e-3, upper=2**7),
-                    'init_value': 20.0,
+                    'init_value': 2**7,
                 },
                 'learning_rate': {
                     'domain': tune.loguniform(lower=2**-10, upper=1.0),
@@ -278,7 +278,7 @@ class AutoML(Problem):
                 },                        
                 'reg_alpha': {
                     'domain': tune.loguniform(lower=2**-10, upper=2**10),
-                    'init_value': 1e-10,
+                    'init_value': 2**-10,
                 },    
                 'reg_lambda': {
                     'domain': tune.loguniform(lower=2**-10, upper=2**10),
@@ -317,11 +317,49 @@ class AutoML(Problem):
             # ‘binary’ or ‘multiclass’ for LGBMClassifier
             self.params = {
                 "n_estimators": self.params["n_estimators"],
-                "num_leaves": self.params.get('num_leaves'),
+                "max_leaves": self.params.get('max_leaves'),
                 'objective': self.params.get("objective"),
                 'n_jobs': n_jobs,
                 'learning_rate': params["learning_rate"],
                 "min_data_in_leaf": int(round(params["min_data_in_leaf"])),
+            }
+
+
+    class LGBM_MLNET_ALTER(LGBM_CFO):
+
+
+        @classmethod
+        def search_space(cls, data_size, **params): 
+            return {
+                'n_estimators': {
+                    'domain': tune.qloguniform(lower=2, upper=256, q=1),
+                    'init_value': 2,
+                },
+                'max_leaves': {
+                    'domain': tune.qloguniform(lower=2, upper=256, q=1),
+                    'init_value': 2,
+                },
+                'min_child_weight': {
+                    'domain': tune.loguniform(lower=1e-3, upper=2**7),
+                    'init_value': 2**7,
+                },
+                'learning_rate': {
+                    'domain': tune.loguniform(lower=1e-3, upper=1.0),
+                },
+            }
+
+
+        def __init__(self, task='binary', n_jobs=1, **params):
+            super().__init__(task, n_jobs, **params)
+            # Default: ‘regression’ for LGBMRegressor, 
+            # ‘binary’ or ‘multiclass’ for LGBMClassifier
+            self.params = {
+                "n_estimators": self.params["n_estimators"],
+                "max_leaves": self.params.get('max_leaves'),
+                'objective': self.params.get("objective"),
+                'n_jobs': n_jobs,
+                'learning_rate': params["learning_rate"],
+                "min_child_weight": params["min_child_weight"],
             }
 
 
@@ -714,6 +752,8 @@ class AutoML(Problem):
             estimator = AutoML.LGBM_CFO_Large
         elif name == 'lgbm_mlnet':
             estimator = AutoML.LGBM_MLNET
+        elif name == 'lgbm_mlnet_alter':
+            estimator = AutoML.LGBM_MLNET_ALTER
         elif name == 'xgb_cfo':
             estimator = AutoML.XGB_CFO
         elif name == 'xgb_cfo_large':
@@ -851,7 +891,7 @@ class AutoML(Problem):
                 'max_depth': 1,
                 'min_child_weight': 2**7,
                 }
-        elif self.estimator == AutoML.LGBM_MLNET:
+        elif self.estimator in (AutoML.LGBM_MLNET, AutoML.LGBM_MLNET_ALTER):
             logger.info('setting up LGBM_MLNET hpo')
             self._init_config = dict((key, value['init_value']) for key, value 
              in self.estimator.search_space(self.data_size).items()
