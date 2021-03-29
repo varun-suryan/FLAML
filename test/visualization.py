@@ -222,18 +222,23 @@ def test_agg_final_result():
     #      'riccardo', 'higgs', 'fabert', 'cnae'], 
     #     ['BlendSearch+Optuna',],
     #     14400.0, 0))
+    # print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large', 'lgbm_mlnet_alter'],
+    #     ['sylvine', 'mfeat', 'jungle', 
+    #      'riccardo', 'fabert', 'cnae'], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     14400.0, 0))
 
-    print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large', 'lgbm_mlnet'],
-        ['Australian', 'blood', 'kr'], 
-        ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
-        3600.0, 0))
-    print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large', 'lgbm_mlnet'],
+    # print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large', 'lgbm_mlnet'],
+    #     ['Australian', 'blood', 'kr'], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     3600.0, 0))
+    print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large', 'lgbm_large', 'lgbm_mlnet'],
         ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
          'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine',
          'riccardo', 'higgs', 'fabert', 'cnae'], 
         ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
         14400.0, 0, 3600))
-    print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large', 'lgbm_mlnet'],
+    print(agg_final_result(['lgbm_cfo', 'lgbm_cfo_large', 'lgbm_large', 'lgbm_mlnet'],
         ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
          'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine',
          'riccardo', 'higgs', 'fabert', 'cnae'], 
@@ -271,17 +276,27 @@ def test_final_result():
     #      'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine'], 
     #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
     #     14400.0, 0))
-    print("lgbm_cfo_large, 1h")
-    print(final_result('lgbm_cfo_large',
+    print("lgbm, 1h")
+    print(final_result('lgbm',
         ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
-         'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine'], 
+         'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine',
+         'riccardo', 'higgs', 'fabert', 'cnae',
+         'KDDCup09', 'numerai28', 'credit', 'car', 'kc1', 'phoneme', 'segment'], 
         ['BlendSearch+Optuna', 'CFO', 'Optuna'],
-        14400.0, 0, 3600))
-    print(final_result('lgbm_cfo_large',
+        28800.0, 0, 3600))
+    print(final_result('lgbm',
         ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
-         'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine'], 
-        ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
-        14400.0, 0, 3600))        
+         'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine',
+         'riccardo', 'higgs', 'fabert', 'cnae',
+         'KDDCup09', 'numerai28', 'credit', 'car', 'kc1', 'phoneme', 'segment'], 
+        ['BlendSearch+Optuna', 'CFO', 'Optuna'],
+        28800.0, 0))
+    # print(final_result('lgbm',
+    #     ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
+    #      'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine',
+    #      'riccardo', 'higgs', 'fabert', 'cnae'], 
+    #     ['Ax', 'BlendSearch+Optuna', 'CFO', 'HyperOpt', 'Nevergrad', 'Optuna'],
+    #     14400.0, 0))        
     # print("lgbm_cfo, 1h")
     # print(final_result('lgbm_cfo',
     #     ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
