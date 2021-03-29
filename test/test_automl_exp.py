@@ -73,7 +73,10 @@ def _test_problem_parallel(problem, time_budget_s= 120, n_total_pu=4, n_per_tria
         total_budget=time_budget_s)
 
     # ray.init(num_cpus=n_total_pu, num_gpus=0) #n_total_pu
-    points_to_evaluate=[init_config]
+    if isinstance(init_config, list):
+        points_to_evaluate=init_config
+    else:
+        points_to_evaluate=[init_config]
 
     if 'BlendSearch' in method and False:
         # the default search_alg is BlendSearch in flaml 
@@ -96,7 +99,7 @@ def _test_problem_parallel(problem, time_budget_s= 120, n_total_pu=4, n_per_tria
             use_ray=True) 
     else: 
         from ray.tune.suggest import BasicVariantGenerator
-        scheduler = None
+        scheduler = algo = None
         if 'Optuna' in method:
             from ray.tune.suggest.optuna import OptunaSearch
             import optuna
