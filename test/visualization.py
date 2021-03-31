@@ -284,6 +284,7 @@ def test_final_result():
          'KDDCup09', 'numerai28', 'credit', 'car', 'kc1', 'phoneme', 'segment'], 
         ['BlendSearch+Optuna', 'CFO', 'Optuna'],
         28800.0, 0, 3600))
+    print("lgbm, 8h")
     print(final_result('lgbm',
         ['Airlines', 'christine', 'shuttle', 'connect', 'sylvine', 'guillermo',
          'volkert', 'MiniBooNE', 'Jannis', 'mfeat', 'jungle', 'jasmine',
