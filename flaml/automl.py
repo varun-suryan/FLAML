@@ -658,7 +658,6 @@ class AutoML:
             def update(self, iter_num, val_loss, trial_time):
                 self.iter_num = iter_num
                 if val_loss < self.val_loss: self.val_loss = val_loss
-                #NOTE: this time_used is the total time used by the learner only when log_type='all'
                 self.time_used += trial_time
  
         logger.info('log file name {}'.format(log_file_name))
@@ -674,6 +673,9 @@ class AutoML:
                         record.trial_time)
 
         # print learner info summarized from log.
+        # NOTE about total time in this table: The total time is calculated based
+        # on the recorded trials in the log. Thus It is the actual total time used 
+        # by the learner only when one set log_type='all' in fit()
         info_name = ['Learner', 'Iteration', 'Val loss', 'Total time']
         row_format ="{:>15}" * (len(info_name))
         header = row_format.format(*info_name)
