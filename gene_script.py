@@ -144,7 +144,7 @@ if __name__=='__main__':
                     for f_chunk in fold_chunk_list:
                         alias_fold = ' -r ' + ' '.join(f_chunk) 
                         alias_screen_method_fold = alias_screen_method + '-' + f_chunk[0] 
-                        argument_list = [alias_time, argu_learner, argu_d, alias_method, alias_time, alias_core, alias_core_per_trial,
+                        argument_list = [alias_time, argu_learner, argu_d, alias_method, alias_core, alias_core_per_trial,
                            alias_fold, additional_argument]
                         line_part1 = '\n'+ 'screen -Sdm ' \
                             + alias_screen_method_fold + ' ' + 'bash -c '

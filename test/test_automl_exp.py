@@ -157,7 +157,7 @@ def _test_problem_parallel(problem, time_budget_s= 120, n_total_pu=4, n_per_tria
             algo = AxSearch(
                 points_to_evaluate=points_to_evaluate, 
                 space=search_space, mode=mode, metric=metric)
-        elif 'HyperOpt' == method:
+        elif 'HyperOpt' in method:
             # pip install -U hyperopt
             from ray.tune.suggest.hyperopt import HyperOptSearch
             algo = HyperOptSearch(

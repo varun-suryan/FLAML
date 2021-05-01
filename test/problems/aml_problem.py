@@ -248,6 +248,25 @@ class AutoML(Problem):
     class LGBM(LGBM_CFO): pass
 
 
+    class LGBM_Normal(LGBM_CFO):
+
+        @classmethod
+        def search_space(cls, data_size, **params): 
+            space = super().search_space(data_size, **params)
+            for key in ("n_estimators", "num_leaves"):
+                domain = space[key]["domain"]
+                space[key]["domain"] = tune.randn(
+                    np.log2(domain.lower),
+                    np.log2(domain.upper / domain.lower) / 10)
+            return space
+
+        def __init__(self, task='binary', n_jobs=1, **params):
+            params = params.copy()
+            for key in ("n_estimators", "num_leaves"):
+                params[key] = int(round(2**max(1,params[key])))
+            super().__init__(task, n_jobs, **params)
+
+
     class LGBM_MLNET(LGBM_CFO):
 
 
@@ -711,6 +730,8 @@ class AutoML(Problem):
             estimator = AutoML.LGBM_CFO
         elif name == 'lgbm':
             estimator = AutoML.LGBM
+        elif name == 'lgbm_normal':
+            estimator = AutoML.LGBM_Normal
         elif name == 'lgbm_mlnet':
             estimator = AutoML.LGBM_MLNET
         elif name == 'lgbm_mlnet_alter':
@@ -837,7 +858,7 @@ class AutoML(Problem):
                 'max_leaves': 4,
                 'min_child_weight': 20,
                 }   
-        elif self.estimator == AutoML.LGBM_CFO or self.estimator == AutoML.LGBM:
+        elif self.estimator in (AutoML.LGBM_CFO, AutoML.LGBM, AutoML.LGBM_Normal):
             logger.info('setting up LGBM_CFO or LGBM hpo')
             self._init_config = dict((key, value['init_value']) for key, value 
              in self.estimator.search_space(self.data_size).items()
