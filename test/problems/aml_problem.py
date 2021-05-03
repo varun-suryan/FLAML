@@ -263,7 +263,7 @@ class AutoML(Problem):
         def __init__(self, task='binary', n_jobs=1, **params):
             params = params.copy()
             for key in ("n_estimators", "num_leaves"):
-                params[key] = int(round(2**max(1,params[key])))
+                params[key] = int(round(2**(2 + np.abs(params[key] - 2))))
             super().__init__(task, n_jobs, **params)
 
 
@@ -730,7 +730,7 @@ class AutoML(Problem):
             estimator = AutoML.LGBM_CFO
         elif name == 'lgbm':
             estimator = AutoML.LGBM
-        elif name == 'lgbm_normal':
+        elif name == 'lgbm_normal_1side':
             estimator = AutoML.LGBM_Normal
         elif name == 'lgbm_mlnet':
             estimator = AutoML.LGBM_MLNET
