@@ -9,7 +9,7 @@ MAIN_RES_LOG_DIR = './test/vw/vw_benchmark/result/result_log/'
 
 AB_RES_LOG_DIR = './test/vw/vw_benchmark/result/result_log/'
 RESOURCE_DIR = './test/vw/resources/'
-
+DATA_LOG_DIR = './test/vw/vw_benchmark/data/'
 RANDOM_SEED = 20201234
 QW_OML_API_KEY = '8c4eebcda506ae1065902c2b224369b9'
 WARMSTART_NUM = 50

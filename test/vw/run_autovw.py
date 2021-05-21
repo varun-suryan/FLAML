@@ -9,7 +9,8 @@ from vowpalwabbit import pyvw
 from flaml import AutoVW
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from vw_benchmark.config import LOG_DIR, PLOT_DIR, MAIN_RES_LOG_DIR, RESOURCE_DIR, AGGREGATE_RES_DIR
+from vw_benchmark.config import LOG_DIR, PLOT_DIR, MAIN_RES_LOG_DIR, RESOURCE_DIR
+from vw_benchmark.config import AGGREGATE_RES_DIR, DATA_LOG_DIR, VW_DS_DIR
 import logging
 import matplotlib.pyplot as plt
 from vw_benchmark.result_log import ResultLogWriter
@@ -140,6 +141,9 @@ if __name__ == '__main__':
         os.makedirs(PLOT_DIR)
     if not os.path.exists(RES_LOG_DIR):
         os.makedirs(RES_LOG_DIR)
+    if not os.path.exists(DATA_LOG_DIR):
+        os.makedirs(DATA_LOG_DIR)
+        os.makedirs(VW_DS_DIR)
 
     # **********parse method config, exp config, and dataset info from yaml files****
     # file_constraints = open(RESOURCE_DIR + 'exp_config.yaml', 'r', encoding="utf-8")
