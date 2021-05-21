@@ -153,3 +153,5 @@ notebook/.azureml
 mlruns
 logs
 automl.pkl
+*.sh
+/test/vw/vw_benchmark/
