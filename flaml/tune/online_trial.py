@@ -434,3 +434,13 @@ class VWOnlineTrial(BaseOnlineTrial):
                 ns_feature_dim[ns] = feature_dim
         logger.debug('name space feature dimension %s', ns_feature_dim)
         return ns_feature_dim
+
+
+class VWOnlineBanditTrial(VWOnlineTrial):
+
+
+    def train_eval_model_online(self, data_sample, y_pred):
+        """TODO: Train and eval the bandit model online
+        """
+        pass
+        

@@ -126,10 +126,13 @@ class OnlineTrialRunner:
         """Schedule up to max_live_model_num trials to run
 
         It consists of the following several parts:
+        Update model:
         0. Update running trials using observations received.
+        Tests for Champion
         1. Test for champion (BetterThan test, and WorseThan test)
             1.1 BetterThan test
             1.2 WorseThan test: a trial may be removed if WroseThan test is triggered
+        Online Scheduling:
         2. Report results to the searcher and scheduler (the scheduler will return a decision about
             the status of the running trials).
         3. Pause or stop a trial according to the scheduler's decision. 
@@ -489,3 +492,14 @@ class OnlineTrialRunner:
         Not implementated yet
         """
         NotImplementedError
+
+
+class OnlineBanditTrialRunner(OnlineTrialRunner):
+
+
+    def step(self, max_live_model_num, data_sample=None, prediction_trial_tuple=None):
+    
+        """Schedule up to max_live_model_num bandit trials to run
+        #TODO: revise the part about model udpate. 
+        """
+        pass
