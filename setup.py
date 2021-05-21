@@ -63,9 +63,18 @@ setuptools.setup(
             "nni",
         ],
         "catboost": ["catboost>=0.23"],
-        "vw": [
+        "online_automl": [
             "vowpalwabbit",
             "ray[tune]==1.2.0",
+        ],
+        "online_automl_eval": [
+            "NumPy>=1.16.2",
+            "vowpalwabbit",
+            "ray[tune]",
+            "pyyaml",
+            "pandas",
+            "matplotlib",
+            "openml"
         ]
     },
     classifiers=[
