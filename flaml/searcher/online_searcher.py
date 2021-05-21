@@ -43,7 +43,11 @@ class BaseSearcher:
 
 class ChampionFrontierSearcher(BaseSearcher):
     """This class serves the role of ConfigOralce.
-    
+    Args:
+        init_config (dict): the init_config, which will be used as the init champion
+        space (dict): the search space
+        online_trial_args: args about VW model
+
     NOTE about searcher_trial_id and trial_id:
     Every time we create a VW trial, we generate a searcher_trial_id.
     At the same time, we also record the trial_id of the VW trial. 
@@ -51,6 +55,7 @@ class ChampionFrontierSearcher(BaseSearcher):
     So if two VWTrial is associated with the same config, they will have the same trial_id
     (although not the same searcher_trial_id).
     searcher_trial_id will be used in suggest()
+
     """
     POLY_EXPANSION_ADDITION_NUM = 1
     POLY_EXPANSION_ORDER = 2
@@ -67,7 +72,7 @@ class ChampionFrontierSearcher(BaseSearcher):
                  metric: Optional[str] = None,
                  mode: Optional[str] = None,
                  config_oracle_random_seed: Optional[int] = 2345,
-                 space: Optional[dict] = None,
+                 space: dict = None,
                  online_trial_args={},
                  nonpoly_searcher_name='CFO' # or 'Niave'
                  ):

@@ -17,10 +17,10 @@ class AutoVW:
                  init_config, search_space, and trainable_func, for example an VW instance.
                  (Side note about the problem: the dataset is also part of problem, so the problem
                  also knows dataset related info, e.g. dim of feature)
-        concurrent_running_budget (int): the max number of live models allowed. Default = 5
+        max_live_model_num (int): the max number of live models allowed. Default = 5
         ************Args about ChaCha***************
-        max_live_model_num (int): the maximum number of models allowed
         min_resource_lease (float or str): if set as 'auto', it will be calculated automatically
+        ******The following are optional******
         automl_runner_args (dict): configuration for the OnlineTrialRunner
         scheduler_args (dict): configuration for the scheduler
         model_select_policy (str): how to select one model to do prediction from the live model pool
@@ -67,6 +67,7 @@ class AutoVW:
         logger.info('scheduler_args %s', scheduler_args)
         logger.info('searcher_args %s', searcher_args)
         logger.info('automl_runner_args %s', automl_runner_args)
+        # ChaCha's scheduling and online hyperparameter search compontent is realized by this OnlineTrialRunner class
         self._trial_runner = OnlineTrialRunner(max_live_model_num=self._max_live_model_num,
                                                searcher=searcher,
                                                scheduler=scheduler,

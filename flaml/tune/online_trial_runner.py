@@ -126,12 +126,14 @@ class OnlineTrialRunner:
         """Schedule up to max_live_model_num trials to run
 
         It consists of the following several parts:
-        1. Update running trials using 
+        0. Update running trials using observations received.
         1. Test for champion (BetterThan test, and WorseThan test)
             1.1 BetterThan test
             1.2 WorseThan test: a trial may be removed if WroseThan test is triggered
-        2. Add trial into the OnlineTrialRunner if there are opening slots
-        3. 
+        2. Report results to the searcher and scheduler (the scheduler will return a decision about
+            the status of the running trials).
+        3. Pause or stop a trial according to the scheduler's decision. 
+           Add trial into the OnlineTrialRunner if there are opening slots.
         """
         # ***********Update running trials with observation***************************
         if data_sample is not None:
