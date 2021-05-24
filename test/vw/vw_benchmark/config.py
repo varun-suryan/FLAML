@@ -96,7 +96,7 @@ FINAL_METHOD_alias = {
     'ChaCha_remove_100k_1_5_ns+lr': 'ChaCha:NI+LR',
     'ChaCha_remove_1000k_1_5': 'ChaCha:NI',
     'ChaCha_remove_1000k_1_5_ns+lr': 'ChaCha:NI+LR',
-    'OfflineVW': 'Offline'
+    'Offline_100k_1_5': 'Offline'
 }
 
 FINAL_METHOD_alias_key_list = ['Vanilla', 'Random', 'Random:NI', 'Random:NI+LR', 'Exhaustive',

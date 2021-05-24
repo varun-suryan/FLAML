@@ -4,6 +4,9 @@ Vanilla:
   is_naive: True
   config:
 
+Offline:
+  is_naive: True
+  config:
 
 Oracle:
   is_naive: True 

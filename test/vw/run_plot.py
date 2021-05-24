@@ -57,7 +57,7 @@ FINAL_METHOD_hatch= {
 
 
 
-def normalized_scores_barplot(res_dic, alias='', method_list_to_show = [], error_bar=False, print_table=False,name_0='naive', name_1='fixed-50'):
+def normalized_scores_barplot_bak(res_dic, alias='', method_list_to_show = [], error_bar=False, print_table=False,name_0='naive', name_1='fixed-50'):
     all_names = [ 'fixed-5-VW', 'ChaCha-CB','ChaCha-Org','ChaCha', 'ChaCha-Final','ChaCha-nochampion-top0', 'ChaCha-ucb-top0','Chambent-Hybrid', 'Chambent-Van-ucb-tophalf']
     
     table_method_names = ['fixed-5-VW','Chambent-Hybrid', 'ChaCha-nochampion-top0', 'ChaCha-ucb-top0']
@@ -201,6 +201,7 @@ def normalized_scores_barplot(res_dic, method_list=[], alias='test'):
     fig, ax = plt.subplots()
     table_method_mean ={}
     table_method_std = {}
+    to_plot_method_names = []
     for method_name, mean_std in dataset_method_results.items():
         if method_name in method_list:
             m_mean = [dataset_results_mean[d_name][method_name] for d_name in datasets]
@@ -215,24 +216,34 @@ def normalized_scores_barplot(res_dic, method_list=[], alias='test'):
             r_position.append(r_new) 
             # plt.bar(r_position[-1], m_mean, width=barWidth, yerr=m_std, label=m_alias, color=m_color, ecolor='grey' ) #hatch = m_hatch,
             plt.bar(r_position[-1], m_mean, width=barWidth, yerr=m_std, label=m_alias, color=m_color, ecolor='grey') #hatch = m_hatch,
-        if method_name in table_method_names:
             table_method_mean[method_name] = m_mean
             table_method_std[method_name] = m_std
+            if method_name not in to_plot_method_names:
+                to_plot_method_names.append(method_name)
+
     logger.info('dataset_method_results %s', dataset_method_results)
     # labels = datasets
+    print_table = True
+    if len(to_plot_method_names) == 4:
+        to_plot_method_names = ['Random', 'ChaCharemove', 'ChaChawo', 'ChaChaaggressive']
+        to_plot_method_names_alias =  ['Random', 'ChaCha', 'ChaCha-w/o-Champion', 'ChaCha-AggressiveScheduling']
+    elif len(to_plot_method_names) == 2:
+        to_plot_method_names = ['Random', 'ChaCharemove']
+        to_plot_method_names_alias =  ['Random', 'ChaCha']
+    table_line_0 = 'Dataset id &' + (' & ').join([n for n in to_plot_method_names_alias]) + ' \\\ \hline'
     if print_table:
         print(table_line_0) 
         for i, d_id in enumerate(labels):
-            mean_list = [table_method_mean[method][i] for method in table_method_names ]
+            mean_list = [table_method_mean[method][i] for method in to_plot_method_names ]
             max_mean = max(mean_list)
             print_mean_list = {}
             for j, mean in enumerate(mean_list):
                 if mean != max_mean:
                     print_mean = '{:.2f}'.format(float(mean))
                 else: print_mean = '\\textbf{'+ '{:.2f}'.format(float(mean)) + '}'
-                print_mean_list[table_method_names[j]] = print_mean
+                print_mean_list[to_plot_method_names[j]] = print_mean
             res_list = [print_mean_list[method]+ ' $\pm$ ' + \
-                 '{:.2f}'.format(float(table_method_std[method][i])) for method in table_method_names]
+                 '{:.2f}'.format(float(table_method_std[method][i])) for method in to_plot_method_names]
             data_line = str(d_id) + ' & ' +  (' & ').join(res_list) + ' \\\ '
             print(data_line)
     
@@ -248,6 +259,7 @@ def normalized_scores_barplot(res_dic, method_list=[], alias='test'):
     else:
         ax.legend(loc='upper left', ncol= loc_num, prop=LEGEND_properties) #prop=LEGEND_properties
     
+
     def autolabel(rects):
         """Attach a text label above each bar in *rects*, displaying its height."""
         for rect in rects:

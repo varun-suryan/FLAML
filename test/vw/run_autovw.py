@@ -84,7 +84,9 @@ def online_learning_loop(iter_num, vw_examples, Y, vw_alg, loss_func,
         # predict step
         y_pred = vw_alg.predict(vw_x)
         # learn step
-        vw_alg.learn(vw_x)
+        # vw_alg.learn(vw_x)
+        if 'Offline' not in method_name or (i<0.2*iter_num):
+            vw_alg.learn(vw_x)
         if demo_champion_detection and hasattr(vw_alg, 'get_champion_id'):
             champion_id = vw_alg.get_champion_id()
             if champion_id != old_champion:
