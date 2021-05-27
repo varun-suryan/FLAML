@@ -96,11 +96,13 @@ FINAL_METHOD_alias = {
     'ChaCha_remove_100k_1_5_ns+lr': 'ChaCha:NI+LR',
     'ChaCha_remove_1000k_1_5': 'ChaCha:NI',
     'ChaCha_remove_1000k_1_5_ns+lr': 'ChaCha:NI+LR',
-    'Offline_100k_1_5': 'Offline'
+    'Offline_100k_1_5': 'Offline',
+    'Offline': 'Offline',
+    'Offline_Test': 'Offline_Test'
 }
 
 FINAL_METHOD_alias_key_list = ['Vanilla', 'Random', 'Random:NI', 'Random:NI+LR', 'Exhaustive',
-                                'ChaCha', 'ChaCha:NI','ChaCha:NI+LR',
+                                'ChaCha', 'ChaCha:NI','ChaCha:NI+LR', 'Offline', 'Offline_Test'
                                ]
 
 FINAL_METHOD_color = {'Vanilla': 'tab:brown',
@@ -113,7 +115,8 @@ FINAL_METHOD_color = {'Vanilla': 'tab:brown',
                       'ChaCha': 'tab:blue',
                       'ChaCha:NI': 'tab:blue',
                       'ChaCha:NI+LR': 'tab:blue',
-                      'OfflineVW': 'tab:pink'
+                      'Offline': 'red',
+                      'Offline_Test': 'tab:red'
                     }
 
 FINAL_METHOD_line = {
@@ -127,7 +130,8 @@ FINAL_METHOD_line = {
     'ChaCha': '-',
     'ChaCha:NI': '-',
     'ChaCha:NI+LR': '-',
-    'OfflineVW': '-',
+    'Offline': '-',
+    'Offline_Test': '-'
 }
 
 FINAL_METHOD_marker = {
@@ -141,7 +145,8 @@ FINAL_METHOD_marker = {
     'ChaCha': 's',
     'ChaCha:NI': 'o',
     'ChaCha:NI+LR': 's',
-    'OfflineVW': 's',
+    'Offline': 's',
+    'Offline_Test': 's'
 }
 
 
@@ -156,5 +161,6 @@ FINAL_METHOD_hatch= {
     'ChaCha': '/',
     'ChaCha:NI': '/',
     'ChaCha:NI+LR': '/',
-    'OfflineVW': '/',
+    'Offline': '/',
+    'Offline_Test': 'x'
 }

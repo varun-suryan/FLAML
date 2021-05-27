@@ -56,111 +56,10 @@ FINAL_METHOD_hatch= {
 }
 
 
-
-def normalized_scores_barplot_bak(res_dic, alias='', method_list_to_show = [], error_bar=False, print_table=False,name_0='naive', name_1='fixed-50'):
-    all_names = [ 'fixed-5-VW', 'ChaCha-CB','ChaCha-Org','ChaCha', 'ChaCha-Final','ChaCha-nochampion-top0', 'ChaCha-ucb-top0','Chambent-Hybrid', 'Chambent-Van-ucb-tophalf']
-    
-    table_method_names = ['fixed-5-VW','Chambent-Hybrid', 'ChaCha-nochampion-top0', 'ChaCha-ucb-top0']
-    table_name_label = {
-        'fixed-5-VW': '\RandomInit' ,
-        'Chambent-Hybrid': '\Chambent' , 
-        'ChaCha-nochampion-top0':'\Chambent-w/o-Champion', 
-        'ChaCha-ucb-top0': '\Chambent-AggressiveScheduling',
-    }
-    table_lines = []
-    table_line_0 = 'Dataset id &' + (' & ').join([table_name_label[n] for n in table_method_names]) + ' \\\ \hline'
-    # print 
-    print('resdic', res_dic)
-    if not error_bar: 
-        result = [res_dic]
-    else:
-        assert type(res_dic)==list 
-        result = res_dic
-    # print(error_bar, type(result), type(result[0]))
-    datasets = list(result[0].keys())
-    labels = datasets 
-    all_res1=[]
-    all_res2=[]
-    print(datasets)
-    fig, ax = plt.subplots()
-    if len(method_list_to_show) <3: 
-        barWidth = 0.25
-        loc_num = 2
-        blk = False
-    else: 
-        barWidth = 0.2
-        loc_num = 1
-        blk = True
-
-    r_position = []
-    r0 = np.arange(len(labels))
-    r_position.append(r0)
-    table_method_mean ={}
-    table_method_std = {}
-    for i,m_name in enumerate(all_names):
-        all_res = []
-        for res_dic in result:
-            normalized_score = get_normalized_score(res_dic, m_name, datasets)
-            all_res.append(normalized_score)
-        m_mean = np.mean(all_res, axis=0)
-        m_std = np.std(all_res, axis=0)
-        m_alias = FINAL_METHOD_alias[m_name] if m_name in FINAL_METHOD_alias else 'None'
-        m_color = FINAL_METHOD_color[m_name] if m_name in FINAL_METHOD_alias else 'red'
-        m_hatch = FINAL_METHOD_hatch[m_name] if m_name in FINAL_METHOD_alias else 'x'
-        if m_name in method_list_to_show:
-            r_new = [x + barWidth for x in r_position[-1]]
-            r_position.append(r_new) 
-            plt.bar(r_position[-1], m_mean, width=barWidth, yerr=m_std, label=m_alias, color=m_color, ecolor='grey' ) #hatch = m_hatch,
-        if m_name in table_method_names:
-            table_method_mean[m_name] = m_mean
-            table_method_std[m_name] = m_std
-    ###generate table lines
-    if print_table:
-        print(table_line_0) 
-        for i, d_id in enumerate(labels):
-            mean_list = [table_method_mean[method][i] for method in table_method_names ]
-            max_mean = max(mean_list)
-            print_mean_list = {}
-            for j, mean in enumerate(mean_list):
-                if mean != max_mean:
-                    print_mean = '{:.2f}'.format(float(mean))
-                else: print_mean = '\\textbf{'+ '{:.2f}'.format(float(mean)) + '}'
-                print_mean_list[table_method_names[j]] = print_mean
-            res_list = [print_mean_list[method]+ ' $\pm$ ' + \
-                 '{:.2f}'.format(float(table_method_std[method][i])) for method in table_method_names]
-            data_line = str(d_id) + ' & ' +  (' & ').join(res_list) + ' \\\ '
-            print(data_line)
-    # x = np.arange(len(labels))
-    # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_ylabel('Normalized score', fontsize=FONT_size_label)
-    # ax.set_title('Normalzied Scores (naive=0, ExhaustInit=1)')
-    ax.set_xticks(r0)
-    ax.set_xticklabels(labels,rotation=50)
-    ax.set_ylim(-0.5,2.0)
-    if blk:
-        ax.legend(loc='upper left', ncol= loc_num, prop={'weight':'bold' }) #prop=LEGEND_properties
-    else:
-        ax.legend(loc='upper left', ncol= loc_num,prop=LEGEND_properties) #prop=LEGEND_properties
-    def autolabel(rects):
-        """Attach a text label above each bar in *rects*, displaying its height."""
-        for rect in rects:
-            height = rect.get_height()
-            ax.annotate('{}'.format(height),
-                        xy=(rect.get_x() + rect.get_width() / 2, height),
-                        xytext=(0, 3),  # 3 points vertical offset
-                        textcoords="offset points",
-                        ha='center', va='bottom')
-
-    # autolabel(rects1)
-    # autolabel(rects2)
-    # fig.tight_layout()
-    # plt.axhline(y=1.0, color='r', linestyle='--')
-    fig_name = PLOT_DIR  + 'bar_plot_' + alias+ '.pdf'
-    plt.savefig(fig_name)
-    plt.close()
-
-
 def normalized_scores_barplot(res_dic, method_list=[], alias='test'):
+    additional_alias = ':NI'
+    if 'lr' in alias:
+        additional_alias = ':NI+LR'
     # labels are the datasets
     datasets = list(res_dic.keys())
     datasets.sort()
@@ -215,7 +114,7 @@ def normalized_scores_barplot(res_dic, method_list=[], alias='test'):
             r_new = [x + barWidth for x in r_position[-1]]
             r_position.append(r_new) 
             # plt.bar(r_position[-1], m_mean, width=barWidth, yerr=m_std, label=m_alias, color=m_color, ecolor='grey' ) #hatch = m_hatch,
-            plt.bar(r_position[-1], m_mean, width=barWidth, yerr=m_std, label=m_alias, color=m_color, ecolor='grey') #hatch = m_hatch,
+            plt.bar(r_position[-1], m_mean, width=barWidth, yerr=m_std, label=m_alias+additional_alias, color=m_color, ecolor='grey') #hatch = m_hatch,
             table_method_mean[method_name] = m_mean
             table_method_std[method_name] = m_std
             if method_name not in to_plot_method_names:
@@ -227,6 +126,9 @@ def normalized_scores_barplot(res_dic, method_list=[], alias='test'):
     if len(to_plot_method_names) == 4:
         to_plot_method_names = ['Random', 'ChaCharemove', 'ChaChawo', 'ChaChaaggressive']
         to_plot_method_names_alias =  ['Random', 'ChaCha', 'ChaCha-w/o-Champion', 'ChaCha-AggressiveScheduling']
+    elif len(to_plot_method_names) == 3:
+        to_plot_method_names = ['ChaCharemove', 'ChaChawo', 'ChaChaaggressive']
+        to_plot_method_names_alias =  ['ChaCha', 'ChaCha-w/o-Champion', 'ChaCha-AggressiveScheduling']
     elif len(to_plot_method_names) == 2:
         to_plot_method_names = ['Random', 'ChaCharemove']
         to_plot_method_names_alias =  ['Random', 'ChaCha']

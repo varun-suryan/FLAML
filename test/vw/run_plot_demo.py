@@ -56,6 +56,8 @@ if __name__ == '__main__':
                         help='whether to force rerun.')
     parser.add_argument('-log', '--use_log', action='store_true',
                         help='whether to use_log.')
+    parser.add_argument('-demo_drift', '--demo_drift', action='store_true',
+                        help='whether to force rerun.')
     args = parser.parse_args()
     # setup logs
     RES_LOG_DIR = MAIN_RES_LOG_DIR
@@ -179,13 +181,14 @@ if __name__ == '__main__':
         fig_name = PLOT_DIR + vw_online_aml_problem.problem_id + 'all.pdf'
         fig_name_demo = PLOT_DIR + vw_online_aml_problem.problem_id + 'demo.pdf'
         if '1000000' in fig_name:
-            result_interval = 1000
+            result_interval = 1
         else:
             result_interval = 100
-
+        result_interval = 1
+        print(len(method_cum_loss),)
         if args.demo:
             plot_progressive_loss_demo(method_cum_loss, fig_name_demo, result_interval)
         else:
-            plot_progressive_loss(method_cum_loss, fig_name, result_interval)
+            plot_progressive_loss(method_cum_loss, fig_name, result_interval, args.demo_drift)
         
         

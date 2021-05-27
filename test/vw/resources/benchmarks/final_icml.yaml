@@ -112,6 +112,14 @@ oml_1191_10:
   obj_name: mse
   shuffle: False
 
+# # naive similar with Exhaustive
+# oml_41539_10:
+#   type: openml_regression
+#   dataset_id: 41539
+#   vw_namespace_num: 10 
+#   obj_name: mse
+#   shuffle: False
+
 # # remove because Exhaustive = Vanilla
 # oml_537_10:
 #   type: openml_regression
