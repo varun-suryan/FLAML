@@ -26,11 +26,6 @@ class Problem:
     def search_space(self):
         return self._search_space
 
-    @property
-    def trainable_func(self, **kwargs):
-        obj = 0
-        return obj
-
 
 class VWTuning(Problem):
 
@@ -50,8 +45,7 @@ class VWTuning(Problem):
                               'ns_num': ns_num,
                              }
         self._problem_info.update(kwargs)
-        self.fixed_hp_config = {'alg': 'supervised', 'loss_function': 'squared'}
-        print('ues')
+        self._fixed_hp_config = {'alg': 'supervised', 'loss_function': 'squared'}
 
     def _setup_search(self):
         """Set the search space and the initial config
@@ -66,12 +60,6 @@ class VWTuning(Problem):
     @property
     def search_space(self):
         return self._search_space
-
-    @property
-    def trainable_func(self):
-        from vowpalwabbit import pyvw
-        from functools import partial
-        return partial(pyvw.vw, **self.fixed_hp_config)
 
 
 class VWNSInteractionTuning(VWTuning):
@@ -89,12 +77,17 @@ class VWNSInteractionTuning(VWTuning):
 
     def _setup_search(self):
         # TODO: should be search space be a function or class?
-        self._search_space = {'interactions': polynomial_expansion_set(
+        self._search_space = self._fixed_hp_config.copy()
+        self._init_config = self._fixed_hp_config.copy()
+        search_space = {'interactions': polynomial_expansion_set(
                                                        init_monomials=set(self._raw_namespaces),
                                                        highest_poly_order=len(self._raw_namespaces),
-                                                       allow_self_inter=False)} 
-                        
-        self._init_config = {'interactions': set()}
+                                                       allow_self_inter=False),
+                        }
+        init_config = {'interactions': set()}
+        self._search_space.update(search_space) 
+        self._init_config.update(init_config)
+        logger.info('search space %s %s %s', self._search_space, self._init_config, self._fixed_hp_config)
 
     @property
     def init_config(self):
@@ -115,12 +108,15 @@ class VW_NS_LR(VWNSInteractionTuning):
         logger.info('search space %s', self._search_space)
         
     def _setup_search(self):
-        self._search_space = {'interactions': polynomial_expansion_set(
+        self._search_space = self._fixed_hp_config.copy()
+        self._init_config = self._fixed_hp_config.copy()
+        search_space = {'interactions': polynomial_expansion_set(
                                                        init_monomials=set(self._raw_namespaces),
                                                        highest_poly_order=len(self._raw_namespaces),
                                                        allow_self_inter=False),
-                            'learning_rate': loguniform(lower=2e-10, upper=1.0)
-                            #  'learning_rate': uniform(lower=2e-10, upper=1.0)
-                             } 
-                        
-        self._init_config = {'interactions': set(), 'learning_rate': 0.5}
+                                                        'learning_rate': loguniform(lower=2e-10, upper=1.0)
+                        }
+        init_config = {'interactions': set(), 'learning_rate': 0.5}
+        self._search_space.update(search_space)
+        self._init_config.update(init_config)
+        logger.info('search space %s %s %s', self._search_space, self._init_config, self._fixed_hp_config)
