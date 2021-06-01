@@ -9,7 +9,7 @@ MAIN_RES_LOG_DIR = './test/vw/vw_benchmark/result/result_log/'
 
 AB_RES_LOG_DIR = './test/vw/vw_benchmark/result/result_log/'
 RESOURCE_DIR = './test/vw/resources/'
-
+DATA_LOG_DIR = './test/vw/vw_benchmark/data/'
 RANDOM_SEED = 20201234
 QW_OML_API_KEY = '8c4eebcda506ae1065902c2b224369b9'
 WARMSTART_NUM = 50
@@ -74,8 +74,10 @@ FINAL_METHOD_alias = {
     'Exhaustive': 'Exhaustive',
     'Vanilla': 'Vanilla',
     'Random': 'Random',
-    'ChaCha': 'ChaCha-noremove',
+    'ChaCha': 'ChaCha',
     'ChaCha_remove': 'ChaCha',
+    'ChaCha100k': 'ChaCha',
+    'ChaCha1000k': 'ChaCha',
     'Vanilla_100k_1_5': 'Vanilla',
     'Vanilla_100k_1_5_ns+lr': 'Vanilla',
     'Vanilla_1000k_1_5': 'Vanilla',
@@ -96,11 +98,13 @@ FINAL_METHOD_alias = {
     'ChaCha_remove_100k_1_5_ns+lr': 'ChaCha:NI+LR',
     'ChaCha_remove_1000k_1_5': 'ChaCha:NI',
     'ChaCha_remove_1000k_1_5_ns+lr': 'ChaCha:NI+LR',
-    'OfflineVW': 'Offline'
+    'Offline_100k_1_5': 'Offline',
+    'Offline': 'Offline',
+    'Offline_Test': 'Offline_Test'
 }
 
 FINAL_METHOD_alias_key_list = ['Vanilla', 'Random', 'Random:NI', 'Random:NI+LR', 'Exhaustive',
-                                'ChaCha', 'ChaCha:NI','ChaCha:NI+LR',
+                                'ChaCha', 'ChaCha:NI','ChaCha:NI+LR', 'Offline', 'Offline_Test'
                                ]
 
 FINAL_METHOD_color = {'Vanilla': 'tab:brown',
@@ -113,7 +117,8 @@ FINAL_METHOD_color = {'Vanilla': 'tab:brown',
                       'ChaCha': 'tab:blue',
                       'ChaCha:NI': 'tab:blue',
                       'ChaCha:NI+LR': 'tab:blue',
-                      'OfflineVW': 'tab:pink'
+                      'Offline': 'red',
+                      'Offline_Test': 'tab:red'
                     }
 
 FINAL_METHOD_line = {
@@ -127,7 +132,8 @@ FINAL_METHOD_line = {
     'ChaCha': '-',
     'ChaCha:NI': '-',
     'ChaCha:NI+LR': '-',
-    'OfflineVW': '-',
+    'Offline': '-',
+    'Offline_Test': '-'
 }
 
 FINAL_METHOD_marker = {
@@ -141,7 +147,8 @@ FINAL_METHOD_marker = {
     'ChaCha': 's',
     'ChaCha:NI': 'o',
     'ChaCha:NI+LR': 's',
-    'OfflineVW': 's',
+    'Offline': 's',
+    'Offline_Test': 's'
 }
 
 
@@ -156,5 +163,6 @@ FINAL_METHOD_hatch= {
     'ChaCha': '/',
     'ChaCha:NI': '/',
     'ChaCha:NI+LR': '/',
-    'OfflineVW': '/',
+    'Offline': '/',
+    'Offline_Test': 'x'
 }

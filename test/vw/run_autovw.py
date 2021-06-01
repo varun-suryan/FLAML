@@ -7,29 +7,31 @@ from datetime import datetime
 import os
 from vowpalwabbit import pyvw
 from flaml import AutoVW
-import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from vw_benchmark.config import LOG_DIR, PLOT_DIR, MAIN_RES_LOG_DIR, RESOURCE_DIR, AGGREGATE_RES_DIR
+from .vw_benchmark.config import LOG_DIR, PLOT_DIR, MAIN_RES_LOG_DIR, RESOURCE_DIR
+from .vw_benchmark.config import AGGREGATE_RES_DIR, DATA_LOG_DIR, VW_DS_DIR
 import logging
-import matplotlib.pyplot as plt
-from vw_benchmark.result_log import ResultLogWriter
-from vw_benchmark.vw_utils import get_y_from_vw_example
-from vw_benchmark.vw_utils import get_ns_feature_dim_from_vw_example
-from vw_benchmark.utils import plot_progressive_loss
-from flaml.tune.online_trial import VWOnlineTrial
-from problems.vw_online_regression_problem import VWTuning, VWNSInteractionTuning, VW_NS_LR
-
+from .vw_benchmark.result_log import ResultLogWriter
+from .vw_benchmark.vw_utils import get_y_from_vw_example
+from .vw_benchmark.vw_utils import get_ns_feature_dim_from_vw_example
+from .vw_benchmark.utils import plot_progressive_loss
+from .problems.vw_online_regression_problem import VWTuning, VWNSInteractionTuning, VW_NS_LR
 
 logger = logging.getLogger(__name__)
 
-def extract_method_name_from_alg_name(alg_name):
-    
+
+def extract_method_name_from_alg_name(alg_name, is_nslr=False):
+
     print(alg_name)
     if '_' in alg_name:
         info = alg_name.split('_')
         # if 'pause' in alg_name or 'champion' in alg_name or 'aggressive' in alg_name and len(info) >= 2:
-        if len(info) > 4 and 'ChaCha' in alg_name:
-            return str(info[0]) + str(info[1])
+        if not is_nslr:
+            if len(info) > 4 and 'ChaCha' in alg_name:
+                return str(info[0]) + str(info[1])
+        else:
+            if len(info) > 2 and 'ChaCha' in alg_name:
+                return str(info[0]) + str(info[1])
         return str(info[0])
     else:
         return alg_name
@@ -83,7 +85,9 @@ def online_learning_loop(iter_num, vw_examples, Y, vw_alg, loss_func,
         # predict step
         y_pred = vw_alg.predict(vw_x)
         # learn step
-        vw_alg.learn(vw_x)
+        # vw_alg.learn(vw_x)
+        if 'Offline' not in method_name or (i<0.2*iter_num):
+            vw_alg.learn(vw_x)
         if demo_champion_detection and hasattr(vw_alg, 'get_champion_id'):
             champion_id = vw_alg.get_champion_id()
             if champion_id != old_champion:
@@ -140,6 +144,10 @@ if __name__ == '__main__':
         os.makedirs(PLOT_DIR)
     if not os.path.exists(RES_LOG_DIR):
         os.makedirs(RES_LOG_DIR)
+    if not os.path.exists(DATA_LOG_DIR):
+        os.makedirs(DATA_LOG_DIR)
+    if not os.path.exists(VW_DS_DIR):
+        os.makedirs(VW_DS_DIR)
 
     # **********parse method config, exp config, and dataset info from yaml files****
     # file_constraints = open(RESOURCE_DIR + 'exp_config.yaml', 'r', encoding="utf-8")
@@ -195,10 +203,11 @@ if __name__ == '__main__':
         alg_final_score_per_random_seed = {}
         for random_seed in random_seed_list:
             auto_alg_common_args = \
-                {'problem': vw_online_aml_problem,
+                {'init_config': vw_online_aml_problem.init_config,
+                 'search_space': vw_online_aml_problem.search_space,
                  "max_live_model_num": current_exp_config['max_live_model_num'],
                  'min_resource_lease': 'auto',
-                 'config_oracle_random_seed': random_seed
+                 'random_seed': random_seed
                  }
             # setup configs for the experiments to run
             alg_dic = {}

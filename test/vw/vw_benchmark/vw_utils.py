@@ -50,4 +50,3 @@ def get_y_from_vw_example(vw_example):
     """ get y from a vw_example. this works for regression dataset
     """
     return float(vw_example.split('|')[0])
-

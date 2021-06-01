@@ -137,4 +137,3 @@ def get_data(iter_num=None, data_source='simulation', vw_format=True,
         if log_vw_examples:
             return log_vw_examples, Y
     return vw_examples, Y
-

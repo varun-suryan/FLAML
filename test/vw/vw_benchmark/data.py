@@ -8,7 +8,6 @@ from vowpalwabbit import pyvw
 import pylibvw
 
 from sklearn.preprocessing import PolynomialFeatures
-import itertools
 import logging
 import random 
 from .config import VW_DS_DIR
@@ -94,4 +93,3 @@ class DataSimulator:
             # pyvw_example = pyvw.example(raw_vw_example)
             # print(raw_vw_example)
             self.vw_examples.append(raw_vw_example)
-

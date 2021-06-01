@@ -78,9 +78,8 @@ class VWNSInteractionTuning(VWTuning):
 
     def __init__(self, max_iter_num, dataset_id, ns_num, **kwargs):
         super().__init__(max_iter_num, dataset_id, ns_num, **kwargs)
-        from flaml.tune.online_trial import VWOnlineTrial
-        self.namespace_feature_dim = VWOnlineTrial.get_ns_feature_dim_from_vw_example(self.vw_examples[0])
-        self.feature_dim = sum([d for d in self.namespace_feature_dim.values()])
+        from flaml.onlineml import VowpalWabbitTrial
+        self.namespace_feature_dim = VowpalWabbitTrial.get_ns_feature_dim_from_vw_example(self.vw_examples[0])
         self._raw_namespaces = list(self.namespace_feature_dim.keys())
         self._info_key_list = ["dataset_id", "max_iter_num", "ns_num", "shuffle", "use_log"]
         self.problem_id = 'vw-ns-interaction-' + ('_').join(
@@ -96,6 +95,14 @@ class VWNSInteractionTuning(VWTuning):
                                                        allow_self_inter=False)} 
                         
         self._init_config = {'interactions': set()}
+
+    @property
+    def init_config(self):
+        return self._init_config
+
+    @property
+    def search_space(self):
+        return self._search_space
 
 
 class VW_NS_LR(VWNSInteractionTuning):
