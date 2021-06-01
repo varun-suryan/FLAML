@@ -82,7 +82,8 @@ def oml_to_vw_w_grouping(X, y, ds_dir, fname, orginal_dim, group_num, grouping_m
     all_indexes = [i for i in range(orginal_dim)]
     print('grouping', group_num)
     # split all_indexes into # group_num of groups
-    max_size_per_group = math.ceil(orginal_dim/float(group_num))
+    # max_size_per_group = math.ceil(orginal_dim/float(group_num))
+    max_size_per_group = int(np.ceil(orginal_dim / float(group_num)))
     # Option 1: sequential grouping
     if grouping_method == 'sequential':
         
@@ -130,6 +131,7 @@ def save_vw_dataset_w_ns(X, y, did, ds_dir, max_ns_num, is_regression):
         # do not do feature grouping
         from os import path
         # if not path.exists(os.path.join(ds_dir, fname)):
+        # TODO: remove no_grouping code
         if dim < max_ns_num:
             oml_to_vw_no_grouping(X, y, ds_dir, fname)
         else:

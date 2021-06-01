@@ -45,7 +45,7 @@ class VWTuning(Problem):
                               'ns_num': ns_num,
                              }
         self._problem_info.update(kwargs)
-        self._fixed_hp_config = {'alg': 'supervised', 'loss_function': 'squared'}
+        self._fixed_hp_config = kwargs.get('fixed_hp_config', {})
 
     def _setup_search(self):
         """Set the search space and the initial config

@@ -99,6 +99,7 @@ def get_data(iter_num=None, data_source='simulation', vw_format=True,
              max_ns_num=10, shuffle=False, use_log=True):
     logging.info('generating data')
     # get data from simulation
+    # TODO: rename data_source
     vw_examples = None
     if isinstance(data_source, str) and 'simu' in data_source:
         # get simulation data
@@ -111,13 +112,13 @@ def get_data(iter_num=None, data_source='simulation', vw_format=True,
     if vw_format:
         vw_examples = data.vw_examples
     logger.debug('first data %s', vw_examples[0])
+    # TODO: what is this doing?
     if isinstance(data_source, str) and 'simu' in data_source:
         return vw_examples, Y
     # do data shuffling or log transformation for oml data when needed
     if shuffle:
         random.seed(54321)
         random.shuffle(vw_examples)
-    
     # do log transformation
     unique_y = set(Y)
     min_y = min(unique_y)

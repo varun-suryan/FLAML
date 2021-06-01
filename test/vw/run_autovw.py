@@ -186,9 +186,10 @@ if __name__ == '__main__':
         problem_args = {"max_iter_num": current_exp_config['max_sample_num'],
                         "dataset_id": benchmark_info[dataset]['dataset_id'],
                         "ns_num": current_exp_config['namespace_num'],
+                        "fixed_hp_config": fixed_hp_config,
                         "use_log": args.use_log,
                         "shuffle": args.shuffle_data,
-                        "vw_format": True
+                        "vw_format": True,
                         }
         # get the problem
         hp_to_tune = current_exp_config.get('hp_to_tune','NS')
