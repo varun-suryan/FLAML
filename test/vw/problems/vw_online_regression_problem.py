@@ -4,8 +4,8 @@ TODO:
 2. add learners as part of the problem
 """
 import logging
-from flaml.tune.sample import loguniform, uniform
-from flaml.tune.sample import polynomial_expansion_set
+from flaml.tune import loguniform, uniform
+from flaml.tune import polynomial_expansion_set
 from flaml import AutoVW
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class Problem:
 
     def __init__(self, **kwargs):
-        self._setup_search()
+    self._setup_search()
 
     def _setup_search(self):
         self._search_space = {}
