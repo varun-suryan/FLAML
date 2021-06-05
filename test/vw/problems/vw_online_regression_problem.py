@@ -6,6 +6,7 @@ TODO:
 import logging
 from flaml.tune.sample import loguniform, uniform
 from flaml.tune.sample import polynomial_expansion_set
+from flaml import AutoVW
 logger = logging.getLogger(__name__)
 
 
@@ -67,8 +68,7 @@ class VWNSInteractionTuning(VWTuning):
     def __init__(self, max_iter_num, dataset_id, ns_num, **kwargs):
         super().__init__(max_iter_num, dataset_id, ns_num, **kwargs)
         from flaml.onlineml import VowpalWabbitTrial
-        self.namespace_feature_dim = VowpalWabbitTrial.get_ns_feature_dim_from_vw_example(self.vw_examples[0])
-        self._raw_namespaces = list(self.namespace_feature_dim.keys())
+        self._raw_namespaces = list(AutoVW.get_ns_feature_dim_from_vw_example(self.vw_examples[0]).keys())
         self._info_key_list = ["dataset_id", "max_iter_num", "ns_num", "shuffle", "use_log"]
         self.problem_id = 'vw-ns-interaction-' + ('_').join(
             [str(self._problem_info.get(k, 'None')) for k in self._info_key_list])
@@ -114,7 +114,7 @@ class VW_NS_LR(VWNSInteractionTuning):
                                                        init_monomials=set(self._raw_namespaces),
                                                        highest_poly_order=len(self._raw_namespaces),
                                                        allow_self_inter=False),
-                                                        'learning_rate': loguniform(lower=2e-10, upper=1.0)
+                                                    'learning_rate': loguniform(lower=2e-10, upper=1.0)
                         }
         init_config = {'interactions': set(), 'learning_rate': 0.5}
         self._search_space.update(search_space)

@@ -165,7 +165,6 @@ if __name__ == '__main__':
         dataset_list = list(benchmark_info.keys())
     iter_num = current_exp_config['max_sample_num']
     # setup alg configs
-    fixed_hp_config = {'alg': 'supervised', 'loss_function': 'squared'}
     random_seed_list = [basic_config_info['run_random_seeds'][i] for i in args.seed_index]
     log_sig = '_'.join([args.benchmark] + [args.exp_config] + args.dataset_list
                        + args.method_list + [str(i) for i in args.seed_index])
@@ -182,11 +181,12 @@ if __name__ == '__main__':
     logger.setLevel(logging.DEBUG)
     scores_per_dataset_per_randomseed = {}
     ###testing
+    logger.info('current_exp_config%s', current_exp_config)
     for dataset in dataset_list:
         problem_args = {"max_iter_num": current_exp_config['max_sample_num'],
                         "dataset_id": benchmark_info[dataset]['dataset_id'],
                         "ns_num": current_exp_config['namespace_num'],
-                        "fixed_hp_config": fixed_hp_config,
+                        "fixed_hp_config": current_exp_config['fixed_hp_config'],
                         "use_log": args.use_log,
                         "shuffle": args.shuffle_data,
                         "vw_format": True,
@@ -217,6 +217,7 @@ if __name__ == '__main__':
             for alg_name in args.method_list:
                 if alg_name in method_data.keys():
                     alg_args = method_data[alg_name]
+                    logger.info('alg_args %s', alg_args)
                     alg_alias = '_'.join([alg_name, args.exp_config])
                     if 'is_naive' not in alg_args or not alg_args['is_naive']:
                         autovw_args = auto_alg_common_args.copy()
@@ -226,7 +227,7 @@ if __name__ == '__main__':
                         logger.info('trial runner config %s %s', alg_args['config'], autovw_args)
                         alg_dic[alg_alias] = AutoVW(**autovw_args)
                     else:
-                        vw_args = fixed_hp_config.copy()
+                        vw_args = current_exp_config['fixed_hp_config'].copy()
                         if 'config' in alg_args and alg_args['config'] is not None:
                             vw_args.update(alg_args['config'])
                         alg_dic[alg_alias] = pyvw.vw(**vw_args)
@@ -261,7 +262,7 @@ if __name__ == '__main__':
                     logger.info('---------------Start running %s on dataset %s--------------', alg_name, dataset)
                     cumulative_loss_list, champion_detection = online_learning_loop(
                         max_iter_num, vw_online_aml_problem.vw_examples, vw_online_aml_problem.Y, alg,
-                        loss_func=fixed_hp_config['loss_function'],
+                        loss_func=current_exp_config['fixed_hp_config']['loss_function'],
                         method_name=alg_name, result_file_address=result_file_address,
                         demo_champion_detection=args.demo_champion)
                     logger.critical('%ss running time: %s, total iter num is %s',

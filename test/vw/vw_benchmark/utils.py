@@ -112,7 +112,7 @@ def get_methods_loss_mean_std(loss_dic, result_interval=1, demo_drift=False):
     return progressive_loss_dic, prog_loss_mean_dic, prog_loss_std_dic
 
 
-def plot_progressive_loss(loss_dic, fig_name, result_interval=1, demo_drift=False):
+def plot_progressive_loss_icml(loss_dic, fig_name, result_interval=1, demo_drift=False):
     """Show real-time progressive validation loss
 
     Args:
@@ -129,7 +129,9 @@ def plot_progressive_loss(loss_dic, fig_name, result_interval=1, demo_drift=Fals
     methods_added = []
     method_alias_dic = {}
     for method in progressive_loss_dic.keys():
-        method_alias = FINAL_METHOD_alias[method]
+        method_alias = FINAL_METHOD_alias.get(method, None)
+        if method_alias is None and 'ChaCha' in method:
+            method_alias = 'ChaCha'
         method_alias_dic[method_alias] = method
         # method_alias_dic[method] = FINAL_METHOD_alias[method]
     for a in FINAL_METHOD_alias_key_list:
@@ -137,8 +139,7 @@ def plot_progressive_loss(loss_dic, fig_name, result_interval=1, demo_drift=Fals
             method = method_alias_dic[a]
         else:
             continue
-    # for method in loss_dic.keys():
-        method_alias = FINAL_METHOD_alias[method]
+        method_alias = a
         if method in prog_loss_mean_dic and method_alias not in methods_added:
             avg_list = prog_loss_mean_dic[method]
             std_list = prog_loss_std_dic[method]
@@ -178,6 +179,64 @@ def plot_progressive_loss(loss_dic, fig_name, result_interval=1, demo_drift=Fals
         ax.set_ylabel('Average loss over time intervals', fontsize=FONT_size_label)
         ax.set_xlim([0,len(avg_list)])
         ax.set_ylim([20, 80])
+    print('fig_name', fig_name)
+    plt.savefig(fig_name)
+
+
+def plot_progressive_loss(loss_dic, fig_name, result_interval=1, demo_drift=False):
+    """Show real-time progressive validation loss
+
+    Args:
+        loss_dic [dict]: key: alg_name, value: list of loss list
+        fig_name [str]: file name of the figure
+    """
+    print('--genearting loss figures---')
+
+    # converting loss to average loss
+    progressive_loss_dic, prog_loss_mean_dic, prog_loss_std_dic = get_methods_loss_mean_std(loss_dic, result_interval, demo_drift)
+    fig, ax = plt.subplots(figsize=(8, 6))
+    methods_added = []
+    for method in progressive_loss_dic.keys():
+        method_alias = FINAL_METHOD_alias.get(method, method)
+        if method in prog_loss_mean_dic and method_alias not in methods_added:
+            avg_list = prog_loss_mean_dic[method]
+            std_list = prog_loss_std_dic[method]
+            print('prog_loss_mean_dic', prog_loss_mean_dic)
+            warm_starting_point = 0  # WARMSTART_NUM  # int(total_obs*0.01) #100 #
+            avg_list = avg_list[warm_starting_point:]
+            std_list = std_list[warm_starting_point:]
+            markevery_number = int(len(avg_list)/10)
+            if demo_drift:
+                starting_point = int(0.2*len(avg_list))
+                print('starting_point', starting_point)
+                print('list', avg_list[starting_point:])
+            else:
+                starting_point = 0
+            ax.plot(range(starting_point, len(avg_list)), avg_list[starting_point:], 
+                label=method_alias, markevery=markevery_number, linewidth=1.5)
+            ax.fill_between(range(starting_point, len(avg_list)), avg_list[starting_point:] - std_list[starting_point:], avg_list[starting_point:] + std_list[starting_point:],
+                             alpha=0.3)
+            methods_added.append(method_alias)
+    if demo_drift:
+        # ax.axvline(x=0.2*len(avg_list), ymin=0, ymax=1, color='r', ls=':')
+        print('length', len(avg_list)*0.2)
+        for j in range(9):
+            ax.axvline(x=(0.1*j + 0.2)*len(avg_list), ymin=0, ymax=1, color='r', ls=':')
+    ax.set_xlabel('# of data samples', fontsize=FONT_size_label)
+    ax.set_ylabel('Progressive validation loss', fontsize=FONT_size_label)
+    ax.set_xlim([0,len(avg_list)])
+    ticks = ax.get_xticks() * int(result_interval)
+    plt.ylabel('Progressive validation loss', fontsize=FONT_size_label)
+    ax.set_xticklabels(ticks)
+    ax.set_yscale('log')
+    
+    plt.legend(loc='upper right', ncol=2, prop=LEGEND_properties)
+    if demo_drift:
+        fig_name = fig_name.replace('.pdf', '_drift.pdf')
+        ax.set_ylabel('Average loss over time intervals', fontsize=FONT_size_label)
+        ax.set_xlim([0,len(avg_list)])
+        ax.set_ylim([20, 80])
+    print('fig_name', fig_name)
     plt.savefig(fig_name)
 
 
