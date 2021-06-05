@@ -8,7 +8,6 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 import time
 import logging
 from flaml.tune import loguniform, polynomial_expansion_set
-from flaml.onlineml import VowpalWabbitTrial
 from vowpalwabbit import pyvw
 from flaml import AutoVW
 import string
@@ -27,16 +26,16 @@ def oml_to_vw_w_grouping(X, y, ds_dir, fname, orginal_dim, group_num,
     if grouping_method == 'sequential':
         group_indexes = []  # lists of lists
         for i in range(group_num):
-            indexes = [ind for ind in range(i * max_size_per_group, min((i+1) * max_size_per_group, orginal_dim))]
+            indexes = [ind for ind in range(i * max_size_per_group,
+                       min((i + 1) * max_size_per_group, orginal_dim))]
             if len(indexes) > 0:
                 group_indexes.append(indexes)
-            print(group_indexes)
         print(group_indexes)
     else:
         NotImplementedError
     if group_indexes:
         if not os.path.exists(ds_dir):
-            os.makedirs(ds_dir)  
+            os.makedirs(ds_dir)
         with open(os.path.join(ds_dir, fname), 'w') as f:
             if isinstance(X, pd.DataFrame):
                 raise NotImplementedError
@@ -44,10 +43,12 @@ def oml_to_vw_w_grouping(X, y, ds_dir, fname, orginal_dim, group_num,
                 for i in range(len(X)):
                     NS_content = []
                     for zz in range(len(group_indexes)):
-                        ns_features = ' '.join('{}:{:.6f}'.format(ind, X[i][ind]) for ind in group_indexes[zz])     
+                        ns_features = ' '.join('{}:{:.6f}'.format(ind, X[i][ind]
+                                                                  ) for ind in group_indexes[zz])
                         NS_content.append(ns_features)
-                    ns_line = '{} |{}'.format(str(y[i]), '|'.join('{} {}'.format(NS_LIST[j], NS_content[j]) for
-                                              j in range(len(group_indexes))))
+                    ns_line = '{} |{}'.format(str(y[i]), '|'.join(
+                                              '{} {}'.format(NS_LIST[j], NS_content[j]
+                                                             ) for j in range(len(group_indexes))))
                     f.write(ns_line)
                     f.write('\n')
             elif isinstance(X, scipy.sparse.csr_matrix):
@@ -72,8 +73,7 @@ def save_vw_dataset_w_ns(X, y, did, ds_dir, max_ns_num, is_regression):
 def shuffle_data(X, y, seed):
     try:
         n = len(X)
-    # TOOD: add exception info
-    except:
+    except ValueError:
         n = X.getnnz()
 
     perm = np.random.RandomState(seed=seed).permutation(n)
@@ -92,7 +92,7 @@ def get_oml_to_vw(did, max_ns_num, ds_dir=VW_DS_DIR):
 
     print('target=ds.default_target_attribute', target_attribute)
     data = ds.get_data(target=target_attribute, dataset_format='array')
-    X, y = data[0], data[1] # return X: pd DataFrame, y: pd series
+    X, y = data[0], data[1]  # return X: pd DataFrame, y: pd series
     import scipy
     if scipy.sparse.issparse(X):
         X = scipy.sparse.csr_matrix.toarray(X)
@@ -111,8 +111,7 @@ def get_oml_to_vw(did, max_ns_num, ds_dir=VW_DS_DIR):
             success = True
         else:
             print('---failed to convert/save oml dataset to vw!!!----')
-    # TODO: add exception info
-    except:
+    except ValueError:
         print('-------------failed to get oml dataset!!!', did)
     return success
 
@@ -120,13 +119,15 @@ def get_oml_to_vw(did, max_ns_num, ds_dir=VW_DS_DIR):
 def load_vw_dataset(did, ds_dir, is_regression, max_ns_num):
     import os
     if is_regression:
-        fname = 'ds_{}_{}_{}.vw'.format(did, max_ns_num, 0) # the second field specifies the largest number of namespaces using.
+        # the second field specifies the largest number of namespaces using.
+        fname = 'ds_{}_{}_{}.vw'.format(did, max_ns_num, 0)
         vw_dataset_file = os.path.join(ds_dir, fname)
         # if file does not exist, generate and save the datasets
         if not os.path.exists(vw_dataset_file) or os.stat(vw_dataset_file).st_size < 1000:
             get_oml_to_vw(did, max_ns_num)
         print(ds_dir, vw_dataset_file)
-        if not os.path.exists(ds_dir): os.makedirs(ds_dir)
+        if not os.path.exists(ds_dir):
+            os.makedirs(ds_dir)
         with open(os.path.join(ds_dir, fname), 'r') as f:
             vw_content = f.read().splitlines()
             print(type(vw_content), len(vw_content))
@@ -196,7 +197,7 @@ class VowpalWabbitNamesspaceTuningProblem:
                               }
         self._problem_info.update(kwargs)
         self._fixed_hp_config = kwargs.get('fixed_hp_config', {})
-        self.namespace_feature_dim = VowpalWabbitTrial.get_ns_feature_dim_from_vw_example(self.vw_examples[0])
+        self.namespace_feature_dim = AutoVW.get_ns_feature_dim_from_vw_example(self.vw_examples[0])
         self._raw_namespaces = list(self.namespace_feature_dim.keys())
         self._setup_search()
 
@@ -331,9 +332,9 @@ class TestAutoVW(unittest.TestCase):
     def test_supervised_vw_tune_namespace(self):
         # basic experiment setting
         vw_oml_problem_args, vw_online_aml_problem = get_vw_tuning_problem()
-        autovw = AutoVW(init_config=vw_online_aml_problem.init_config,
+        autovw = AutoVW(max_live_model_num=5,
                         search_space=vw_online_aml_problem.search_space,
-                        max_live_model_num=5,
+                        init_config=vw_online_aml_problem.init_config,
                         min_resource_lease='auto',
                         random_seed=2345)
 
@@ -347,9 +348,9 @@ class TestAutoVW(unittest.TestCase):
     def test_supervised_vw_tune_namespace_learningrate(self):
         # basic experiment setting
         vw_oml_problem_args, vw_online_aml_problem = get_vw_tuning_problem(tuning_hp='NamesapceInteraction+LearningRate')
-        autovw = AutoVW(init_config=vw_online_aml_problem.init_config,
+        autovw = AutoVW(max_live_model_num=5,
                         search_space=vw_online_aml_problem.search_space,
-                        max_live_model_num=5,
+                        init_config=vw_online_aml_problem.init_config,
                         min_resource_lease='auto',
                         random_seed=2345)
 

@@ -60,8 +60,8 @@ class ChampionFrontierSearcher(BaseSearcher):
     NOTE:
         This class serves the role of ConfigOralce.
         Every time we create an online trial, we generate a searcher_trial_id.
-        At the same time, we also record the trial_id of the VW trial. 
-        Note that the trial_id is a unique signature of the configuraiton. 
+        At the same time, we also record the trial_id of the VW trial.
+        Note that the trial_id is a unique signature of the configuraiton.
         So if two VWTrials are associated with the same config, they will have the same trial_id
         (although not the same searcher_trial_id).
         searcher_trial_id will be used in suggest()
@@ -268,6 +268,7 @@ class ChampionFrontierSearcher(BaseSearcher):
     def _generate_independent_hp_configs(self, hp_name, current_config_value, config_domain) -> List:
         if isinstance(config_domain, PolynomialExpansionSet):
             seed_interactions = list(current_config_value) + list(config_domain.init_monomials)
+            logger.critical('Seed namespaces (singletons and interactions): %s', seed_interactions)
             logger.info('current_config_value %s %s', current_config_value, seed_interactions)
             configs = self._generate_poly_expansion_sets(seed_interactions,
                                                          self.EXPANSION_ORDER,
