@@ -445,7 +445,7 @@
 <span class="sd">        classification), storing the best trained model.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trained_estimator</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trained_estimator</span><span class="o">.</span><span class="n">model</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trained_estimator</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
 
@@ -462,7 +462,7 @@
         <span class="k">if</span> <span class="n">estimator_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_states</span><span class="p">:</span>
             <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_states</span><span class="p">[</span><span class="n">estimator_name</span><span class="p">]</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="s1">&#39;trained_estimator&#39;</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">trained_estimator</span><span class="o">.</span><span class="n">model</span>
+                <span class="k">return</span> <span class="n">state</span><span class="o">.</span><span class="n">trained_estimator</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
     <span class="nd">@property</span>
@@ -499,7 +499,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_transformer</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_label_transformer</span><span class="o">.</span><span class="n">classes_</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trained_estimator</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trained_estimator</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">classes_</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trained_estimator</span><span class="o">.</span><span class="n">classes_</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
         <span class="k">return</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="AutoML.predict"><a class="viewcode-back" href="../../index.html#flaml.AutoML.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_test</span><span class="p">):</span>
@@ -962,14 +962,17 @@
 <span class="sd">                dataframe and label are ignored;</span>
 <span class="sd">                If not, dataframe and label must be provided.</span>
 <span class="sd">            metric: A string of the metric name or a function,</span>
-<span class="sd">                e.g., &#39;accuracy&#39;, &#39;roc_auc&#39;, &#39;f1&#39;, &#39;micro_f1&#39;, &#39;macro_f1&#39;, &#39;log_loss&#39;, &#39;mae&#39;, &#39;mse&#39;, &#39;r2&#39;</span>
+<span class="sd">                e.g., &#39;accuracy&#39;, &#39;roc_auc&#39;, &#39;f1&#39;, &#39;micro_f1&#39;, &#39;macro_f1&#39;,</span>
+<span class="sd">                &#39;log_loss&#39;, &#39;mae&#39;, &#39;mse&#39;, &#39;r2&#39;</span>
 <span class="sd">                if passing a customized metric function, the function needs to</span>
 <span class="sd">                have the follwing signature:</span>
 
 <span class="sd">                .. code-block:: python</span>
 
-<span class="sd">                    def custom_metric(X_test, y_test, estimator, labels,</span>
-<span class="sd">                     X_train, y_train, weight_test=None, weight_train=None):</span>
+<span class="sd">                    def custom_metric(</span>
+<span class="sd">                        X_test, y_test, estimator, labels,</span>
+<span class="sd">                        X_train, y_train, weight_test=None, weight_train=None</span>
+<span class="sd">                    ):</span>
 <span class="sd">                        return metric_to_minimize, metrics_to_log</span>
 
 <span class="sd">                which returns a float number as the minimization objective,</span>
@@ -1075,6 +1078,7 @@
         <span class="c1"># set up learner search space</span>
         <span class="k">for</span> <span class="n">estimator_name</span> <span class="ow">in</span> <span class="n">estimator_list</span><span class="p">:</span>
             <span class="n">estimator_class</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="o">.</span><span class="n">learner_classes</span><span class="p">[</span><span class="n">estimator_name</span><span class="p">]</span>
+            <span class="n">estimator_class</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_search_states</span><span class="p">[</span><span class="n">estimator_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">SearchState</span><span class="p">(</span>
                 <span class="n">learner_class</span><span class="o">=</span><span class="n">estimator_class</span><span class="p">,</span>
                 <span class="n">data_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="o">.</span><span class="n">data_size</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
@@ -1246,7 +1250,7 @@
                         <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="o">.</span><span class="n">time_from_start</span><span class="p">)</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_model_history</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_model_history</span><span class="p">[</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_track_iter</span><span class="p">]</span> <span class="o">=</span> <span class="n">search_state</span><span class="o">.</span><span class="n">trained_estimator</span><span class="o">.</span><span class="n">model</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_track_iter</span><span class="p">]</span> <span class="o">=</span> <span class="n">search_state</span><span class="o">.</span><span class="n">trained_estimator</span>
                     <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trained_estimator</span><span class="p">:</span>
                         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trained_estimator</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_trained_estimator</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1369,6 +1373,8 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_selected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trained_estimator</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">modelcount</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">and</span> <span class="n">mlflow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mlflow</span><span class="o">.</span><span class="n">active_run</span><span class="p">():</span>
+            <span class="n">mlflow</span><span class="o">.</span><span class="n">sklearn</span><span class="o">.</span><span class="n">log_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;best_model&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_trained_estimator&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trained_estimator</span> \
@@ -1388,7 +1394,7 @@
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">estimator</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">estimator_list</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">estimator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_states</span> <span class="ow">and</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_search_states</span><span class="p">[</span><span class="n">estimator</span><span class="p">]</span><span class="o">.</span><span class="n">sample_size</span>
-            <span class="p">):</span>  <span class="c1"># sample_size=none meaning no result</span>
+            <span class="p">):</span>  <span class="c1"># sample_size=None meaning no result</span>
                 <span class="n">search_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_search_states</span><span class="p">[</span><span class="n">estimator</span><span class="p">]</span>
                 <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_search_states</span><span class="p">[</span><span class="n">estimator</span><span class="p">]</span><span class="o">.</span><span class="n">time2eval_best</span>
                     <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="o">.</span><span class="n">time_budget</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="o">.</span><span class="n">time_from_start</span>

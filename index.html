@@ -270,11 +270,14 @@ Note: If X_train and y_train are provided,
 dataframe and label are ignored;
 If not, dataframe and label must be provided.</p></li>
 <li><p><strong>metric</strong> – <p>A string of the metric name or a function,
-e.g., ‘accuracy’, ‘roc_auc’, ‘f1’, ‘micro_f1’, ‘macro_f1’, ‘log_loss’, ‘mae’, ‘mse’, ‘r2’
+e.g., ‘accuracy’, ‘roc_auc’, ‘f1’, ‘micro_f1’, ‘macro_f1’,
+‘log_loss’, ‘mae’, ‘mse’, ‘r2’
 if passing a customized metric function, the function needs to
 have the follwing signature:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">custom_metric</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span>
- <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">weight_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight_train</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">custom_metric</span><span class="p">(</span>
+    <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">estimator</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span>
+    <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">weight_test</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight_train</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">):</span>
     <span class="k">return</span> <span class="n">metric_to_minimize</span><span class="p">,</span> <span class="n">metrics_to_log</span>
 </pre></div>
 </div>
@@ -802,7 +805,8 @@ unsuccessful, e.g. when the search space has already been set.
 <dd><p>suggest a new config, one of the following cases:
 1. same incumbent, increase resource
 2. same resource, move from the incumbent to a random direction
-3. same resource, move from the incumbent to the opposite direction</p>
+3. same resource, move from the incumbent to the opposite direction
+#TODO: better decouple FLOW2 config suggestion and stepsize update</p>
 </dd></dl>
 
 </dd></dl>
