@@ -1,0 +1,4 @@
+{
+    "cacher"   : { "DiskCacher"  : "../.coba_cache/" },
+    "benchmark": { "maxtasksperchild":null }
+}
