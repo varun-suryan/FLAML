@@ -4,7 +4,7 @@ import itertools
 from typing import Dict, Optional, List
 from flaml.tune import Categorical, Float, PolynomialExpansionSet
 from flaml.tune import Trial
-from flaml.onlineml import VowpalWabbitTrial
+from flaml.onlineml import VowpalWabbitTrial, VowpalWabbitBanditTrial
 from flaml.searcher import CFO
 
 logger = logging.getLogger(__name__)
@@ -91,7 +91,9 @@ class ChampionFrontierSearcher(BaseSearcher):
     NUM_RANDOM_SEED = 111
 
     CHAMPION_TRIAL_NAME = 'champion_trial'
-    TRIAL_CLASS = VowpalWabbitTrial
+
+    # TRIAL_CLASS = VowpalWabbitTrial
+    TRIAL_CLASS = VowpalWabbitBanditTrial
 
     def __init__(self,
                  init_config: Dict,

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="58cd420f-8b9d-4271-aee9-54a17324895f" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/coba" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/test/data/ds_42183_10_0.vw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-5k_1_5-1-10605-18-oml_3_10.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-5k_1_5-1-10605-23-oml_3_10.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-5k_1_5-1-10606-00-oml_3_10.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-5k_1_5-1-10607-12-oml_3_10.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.coveragerc" beforeDir="false" afterPath="$PROJECT_DIR$/.coveragerc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.flake8" beforeDir="false" afterPath="$PROJECT_DIR$/.flake8" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/python-package.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/python-package.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CODE_OF_CONDUCT.md" beforeDir="false" afterPath="$PROJECT_DIR$/CODE_OF_CONDUCT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/NOTICE.md" beforeDir="false" afterPath="$PROJECT_DIR$/NOTICE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SECURITY.md" beforeDir="false" afterPath="$PROJECT_DIR$/SECURITY.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/docs/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/conf.py" beforeDir="false" afterPath="$PROJECT_DIR$/docs/conf.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/index.rst" beforeDir="false" afterPath="$PROJECT_DIR$/docs/index.rst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/data.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/data.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/onlineml/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/onlineml/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/onlineml/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/onlineml/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/onlineml/autovw.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/onlineml/autovw.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/onlineml/trial.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/onlineml/trial.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/onlineml/trial_runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/onlineml/trial_runner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/scheduler/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/scheduler/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/scheduler/online_scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/scheduler/online_scheduler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/scheduler/trial_scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/scheduler/trial_scheduler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/searcher/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/searcher/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/searcher/flow2.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/searcher/flow2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/searcher/online_searcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/searcher/online_searcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/searcher/search_thread.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/searcher/search_thread.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/training_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/training_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/tune/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/tune/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/tune/cgmanifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/tune/cgmanifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/tune/result.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/tune/result.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/tune/trial_runner.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/tune/trial_runner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/flaml/version.py" beforeDir="false" afterPath="$PROJECT_DIR$/flaml/version.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebook/flaml_automl.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebook/flaml_automl.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebook/flaml_autovw.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebook/flaml_autovw.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebook/flaml_azureml.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebook/flaml_azureml.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebook/flaml_finetune_transformer.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebook/flaml_finetune_transformer.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebook/flaml_lightgbm.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebook/flaml_lightgbm.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notebook/flaml_xgboost.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/notebook/flaml_xgboost.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/nni/config.yml" beforeDir="false" afterPath="$PROJECT_DIR$/test/nni/config.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/nni/flaml_nni_wrap.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/nni/flaml_nni_wrap.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/nni/mnist.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/nni/mnist.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/nni/search_space.json" beforeDir="false" afterPath="$PROJECT_DIR$/test/nni/search_space.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_automl.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_automl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_autovw.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_autovw.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_python_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_python_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_pytorch_cifar10.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_pytorch_cifar10.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_split.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_split.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_training_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_training_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_version.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_version.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_xgboost2d.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_xgboost2d.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_xgboost2d_sample_size.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_xgboost2d_sample_size.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/tune/test_tune.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/tune/test_tune.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="ProjectId" id="1tDkclh9LAxOER9wTwfnkA0ovmz" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.gutterIcons" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Varun Suryan\PycharmProjects\autoML" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.test.vw.run_autovw">
+    <configuration name="run_autovw" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Anaconda\envs\autoML\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/vw/run_autovw.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="run_autovw" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Anaconda\envs\autoML\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/vw/run_autovw.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="test.vw.run_autovw" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Anaconda\envs\autoML\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
+      <option name="SCRIPT_NAME" value="test.vw.run_autovw" />
+      <option name="PARAMETERS" value="final_icml 100k_1_5 -m Vanilla  -seed 0  -rerun  -log -d oml_151_10" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="true" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="trial" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/flaml/onlineml" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/flaml/onlineml/trial.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.run_autovw" />
+      <item itemvalue="Python.test.vw.run_autovw" />
+      <item itemvalue="Python.trial" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.trial" />
+        <item itemvalue="Python.run_autovw" />
+        <item itemvalue="Python.run_autovw" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="58cd420f-8b9d-4271-aee9-54a17324895f" name="Default Changelist" comment="" />
+      <created>1622311130300</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1622311130300</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

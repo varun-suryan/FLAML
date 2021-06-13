@@ -7,7 +7,7 @@ from datetime import datetime
 import os
 from vowpalwabbit import pyvw
 from flaml import AutoVW
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, zero_one_loss
 from .vw_benchmark.config import LOG_DIR, PLOT_DIR, MAIN_RES_LOG_DIR, RESOURCE_DIR
 from .vw_benchmark.config import AGGREGATE_RES_DIR, DATA_LOG_DIR, VW_DS_DIR
 import logging
@@ -39,9 +39,11 @@ def extract_method_name_from_alg_name(alg_name, is_nslr=False):
 
 def get_loss(y_pred, y_true, loss_func='squared'):
     if 'squared' in loss_func:
-        loss = mean_squared_error([y_pred], [y_true])
+        loss = mean_squared_error([y_pred[0]], [y_true])
     elif 'absolute' in loss_func:
-        loss = mean_absolute_error([y_pred], [y_true])
+        loss = mean_absolute_error([y_pred[0]], [y_true])
+    elif 'zero_one' in loss_func:
+        loss = zero_one_loss([y_pred[0]], [y_true])
     else:
         loss = None
         raise NotImplementedError
@@ -88,6 +90,7 @@ def online_learning_loop(iter_num, vw_examples, Y, vw_alg, loss_func,
         # vw_alg.learn(vw_x)
         if 'Offline' not in method_name or (i<0.2*iter_num):
             vw_alg.learn(vw_x)
+
         if demo_champion_detection and hasattr(vw_alg, 'get_champion_id'):
             champion_id = vw_alg.get_champion_id()
             if champion_id != old_champion:
@@ -97,8 +100,8 @@ def online_learning_loop(iter_num, vw_examples, Y, vw_alg, loss_func,
         loss = get_loss(y_pred, y_true, loss_func)
         loss_list.append(loss)
         y_predict_list.append([y_pred, y_true])
-        # save results
-        result_log.append(record_id=i, y_predict=y_pred, y=y_true, loss=loss,
+        # save results for regression. Commenting now for the classification case.
+        result_log.append(record_id=i, y_predict=y_pred[0], y=y_true, loss=loss,
                           time_used=time.time() - start_time,
                           incumbent_config=None,
                           champion_config=None)
@@ -157,7 +160,7 @@ if __name__ == '__main__':
     method_data = yaml.load(open(RESOURCE_DIR + 'methods.yaml', 'r', encoding="utf-8"))
     current_exp_config = yaml.load(open(RESOURCE_DIR + 'exp_config.yaml', 'r',
                                         encoding="utf-8"))[args.exp_config]
-    
+
     # get the list of dataset from yaml
     if args.dataset_list:
         dataset_list = args.dataset_list

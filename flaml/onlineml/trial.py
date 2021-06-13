@@ -270,6 +270,8 @@ class VowpalWabbitTrial(BaseOnlineTrial):
         - Namespace vs features:
         https://stackoverflow.com/questions/28586225/in-vowpal-wabbit-what-is-the-difference-between-a-namespace-and-feature
     """
+    from vowpalwabbit import pyvw
+    MODEL_CLASS = pyvw.vw
     cost_unit = 1.0
     interactions_config_key = 'interactions'
     MIN_RES_CONST = 5
@@ -297,11 +299,6 @@ class VowpalWabbitTrial(BaseOnlineTrial):
             trial_id (str): id of the trial (if None, it will be generated in the constructor)
 
         """
-        try:
-            from vowpalwabbit import pyvw
-        except ImportError:
-            raise ImportError(
-                'To use AutoVW, please run pip install flaml[vw] to install vowpalwabbit')
         # attributes
         self.trial_id = self._config_to_id(config) if trial_id is None else trial_id
         logger.info('Create trial with trial_id: %s', self.trial_id)
@@ -309,7 +306,7 @@ class VowpalWabbitTrial(BaseOnlineTrial):
                          custom_trial_name, self.trial_id)
         self.model = None   # model is None until the config is scheduled to run
         self.result = None
-        self.trainable_class = pyvw.vw
+        self.trainable_class = self.MODEL_CLASS
         # variables that are needed during online training
         self._metric = metric
         self._y_min_observed = None
@@ -403,6 +400,215 @@ class VowpalWabbitTrial(BaseOnlineTrial):
         else:
             raise NotImplementedError
         return loss_func([y_true], [y_pred])
+
+    def _update_y_range(self, y):
+        """Maintain running observed minimum and maximum target value
+        """
+        if self._y_min_observed is None or y < self._y_min_observed:
+            self._y_min_observed = y
+        if self._y_max_observed is None or y > self._y_max_observed:
+            self._y_max_observed = y
+
+    @staticmethod
+    def _get_dim_from_ns(namespace_feature_dim: dict, namespace_interactions: [set, list]):
+        """Get the dimensionality of the corresponding feature of input namespace set
+        """
+        total_dim = sum(namespace_feature_dim.values())
+        if namespace_interactions:
+            for f in namespace_interactions:
+                ns_dim = 1.0
+                for c in f:
+                    ns_dim *= namespace_feature_dim[c]
+                total_dim += ns_dim
+        return total_dim
+
+    def clean_up_model(self):
+        self.model = None
+        self.result = None
+
+    @staticmethod
+    def _get_y_from_vw_example(vw_example):
+        """Get y from a vw_example. this works for regression datasets.
+        """
+        return float(vw_example.split('|')[0])
+
+
+class VowpalWabbitBanditTrial(BaseOnlineTrial):
+    from vowpalwabbit import pyvw
+    MODEL_CLASS = pyvw.vw
+    cost_unit = 1.0
+    interactions_config_key = 'interactions'
+    MIN_RES_CONST = 5
+
+    def __init__(self,
+                 config: dict,
+                 min_resource_lease: float,
+                 metric: str = 'mae',
+                 is_champion: Optional[bool] = False,
+                 is_checked_under_current_champion: Optional[bool] = True,
+                 custom_trial_name: Optional[str] = 'vw_mae_clipped',
+                 trial_id: Optional[str] = None,
+                 cb_coef: Optional[float] = None,
+                 ):
+        """Constructor
+
+        Args:
+            config (dict): the config of the trial (note that the config is a set
+                because the hyperparameters are )
+            min_resource_lease (float): the minimum resource lease
+            metric (str): the loss metric
+            is_champion (bool): indicates whether the trial is the current champion or not
+            is_checked_under_current_champion (bool): indicates whether this trials has
+                been paused under the current champion
+            trial_id (str): id of the trial (if None, it will be generated in the constructor)
+
+        """
+        # attributes
+        self.trial_id = self._config_to_id(config) if trial_id is None else trial_id
+        logger.info('Create trial with trial_id: %s', self.trial_id)
+        super().__init__(config, min_resource_lease, is_champion, is_checked_under_current_champion,
+                         custom_trial_name, self.trial_id)
+        self.model = None  # model is None until the config is scheduled to run
+        self.result = None
+        self.trainable_class = self.MODEL_CLASS
+        # variables that are needed during online training
+        self._metric = metric
+        self._y_min_observed = None
+        self._y_max_observed = None
+        # application dependent variables
+        self._dim = None
+        self._cb_coef = cb_coef
+
+        # initialize the CI for each trial
+        self._lower_bound = -float('inf')
+        self.point_estimate = 0
+        self._upper_bound = float('inf')
+
+    @staticmethod
+    def _config_to_id(config):
+        """Generate an id for the provided config
+        """
+        # sort config keys
+        sorted_k_list = sorted(list(config.keys()))
+        config_id_full = ''
+        for key in sorted_k_list:
+            v = config[key]
+            config_id = '|'
+            if isinstance(v, set):
+                value_list = sorted(v)
+                config_id += '_'.join([str(k) for k in value_list])
+            else:
+                config_id += str(v)
+            config_id_full = config_id_full + config_id
+        return config_id_full
+
+    def _initialize_vw_model(self, vw_example):
+        """Initialize a vw model using the trainable_class
+        """
+        self._vw_config = self.config.copy()
+        ns_interactions = self.config.get(VowpalWabbitBanditTrial.interactions_config_key, None)
+        # ensure the feature interaction config is a list (required by VW)
+        if ns_interactions is not None:
+            self._vw_config[VowpalWabbitBanditTrial.interactions_config_key] \
+                = list(ns_interactions)
+        # get the dimensionality of the feature according to the namespace configuration
+        namespace_feature_dim = get_ns_feature_dim_from_vw_example(vw_example)
+        self._dim = self._get_dim_from_ns(namespace_feature_dim, ns_interactions)
+        # construct an instance of vw model using the input config and fixed config
+        self.model = self.trainable_class(**self._vw_config)
+        self.result = OnlineResult(self._metric,
+                                   cb_coef=self._cb_coef,
+                                   init_loss=0.0, init_cb=100.0, )
+
+    def train_eval_model_online(self, data_sample, y_pred):
+        """Train and eval model online
+        """
+        # extract info needed the first time we see the data
+        if self._resource_lease == 'auto' or self._resource_lease is None:
+            assert self._dim is not None
+            self._resource_lease = self._dim * self.MIN_RES_CONST
+        y = self._get_y_from_vw_example(data_sample)
+
+        # to update the running minimum y value and max y value
+        self._update_y_range(y)
+
+        if self.model is None:
+            # initialize self.model and self.result
+            self._initialize_vw_model(data_sample)
+
+        # Introduce IPS here to continue the things running
+        # if the predicted label is correct then set cost to -1 else 0. The place for Coba.
+
+        # Scale using importance weights. y_pred[1] is the q_b value.
+        if y == y_pred[0]:
+            stitched_data_sample = f'{y_pred[0]}: -1: {y_pred[1]}' + data_sample[1:]
+
+        else:
+            stitched_data_sample = f'{y_pred[0]}: 1: {y_pred[1]}' + data_sample[1:]
+
+        # self.model.learn(stitched_data_sample)
+        # do one step of learning
+        self.model.learn(stitched_data_sample)
+
+        # Update the CIs of the current model
+        # self.model.update(stitched_data_sample)
+
+        # update training related results accordingly. Notice the indexing of y_pred because it's a tuple now.
+        new_loss = self._get_loss(y, y_pred[0], self._metric,
+                                  self._y_min_observed, self._y_max_observed)
+        # udpate sample size, sum of loss, and cost
+        data_sample_size = 1
+        bound_of_range = self._y_max_observed - self._y_min_observed
+        if bound_of_range == 0:
+            bound_of_range = 1.0
+
+        self.result.update_result(new_loss,
+                                  VowpalWabbitBanditTrial.cost_unit * data_sample_size,
+                                  self._dim, bound_of_range)
+
+    def predict(self, x):
+
+        """Predict using the model
+        """
+
+        if self.model is None:
+            # initialize self.model and self.result
+            self._initialize_vw_model(x)
+
+        # returns array of x probabilities one for every arm. x is the number of arms
+        pred = self.model.predict(x)
+
+        probs = np.clip(np.array(pred), a_min = 0, a_max = None)
+
+        # normalize the probabilities
+        probs /= np.sum(probs)
+
+        # sample the action from normalized probabilities
+        action = np.random.choice(2, p = probs)
+
+        return action, probs[action]  # return the action which is sampled arm index and its probability
+
+    def _get_loss(self, y_true, y_pred, loss_func_name, y_min_observed, y_max_observed):
+        """Get instantaneous loss from y_true and y_pred, and loss_func_name
+            For mae_clip, we clip y_pred in the observed range of y
+            Used for chosing the champion trial -> estimators will probably be plugged in here
+            so what this needs ->p_log, r, p_pred, count=1
+        """
+        if 'mse' in loss_func_name or 'squared' in loss_func_name:
+            loss_func = mean_squared_error
+        elif 'mae' in loss_func_name or 'absolute' in loss_func_name:
+            loss_func = mean_absolute_error
+            if y_min_observed is not None and y_max_observed is not None and \
+                    'clip' in loss_func_name:
+                # clip y_pred in the observed range of y
+                y_pred = min(y_max_observed, max(y_pred, y_min_observed))
+        else:
+            raise NotImplementedError
+        return loss_func([y_true], [y_pred])
+
+    def update(self):
+        pass
+        # Note: Update the current CIs for the model
 
     def _update_y_range(self, y):
         """Maintain running observed minimum and maximum target value

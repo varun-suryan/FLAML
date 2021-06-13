@@ -8,7 +8,6 @@ from flaml.onlineml.trial import get_ns_feature_dim_from_vw_example
 
 logger = logging.getLogger(__name__)
 
-
 class AutoVW:
     """The AutoML class
 
@@ -128,9 +127,12 @@ class AutoVW:
         Args:
             data_sample (vw_example)
         """
+        # Average over all the live models
         if self._trial_runner is None:
             self._setup_trial_runner(data_sample)
-        self._best_trial = self._select_best_trial()
+
+        # using epsilon-greedy exploration around champion. Using epsilon = 0.1
+        self._best_trial = self._select_best_trial() if 0.1 < random.random() else random.choice(self._trial_runner.running_trials)
         self._y_predict = self._best_trial.predict(data_sample)
         # code for debugging purpose
         if self._prediction_trial_id is None or \

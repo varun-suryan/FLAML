@@ -134,7 +134,7 @@ class OnlineTrialRunner:
             Tests for Champion
             1. Test for champion (BetterThan test, and WorseThan test)
                 1.1 BetterThan test
-                1.2 WorseThan test: a trial may be removed if WroseThan test is triggered
+                1.2 WorseThan test: a trial may be removed if Worse Than test is triggered
             Online Scheduling:
             2. Report results to the searcher and scheduler (the scheduler will return a decision about
                 the status of the running trials).
@@ -155,7 +155,14 @@ class OnlineTrialRunner:
                     y_predicted = trial.predict(data_sample)
                 else:
                     y_predicted = prediction_made
-                trial.train_eval_model_online(data_sample, y_predicted)
+
+                # check if a trial is predicting the same action as the champion trial.
+                # This part is different from the supervised setting. Here we are passing prediction_made
+                # as the input to the trial.train_eval_model_online function as opposed to the y_predicted.
+                # No matter what the prediction is we always feed the data
+
+                trial.train_eval_model_online(data_sample, prediction_made)
+
                 logger.debug('running trial at iter %s %s %s %s %s %s', self._total_steps,
                              trial.trial_id, trial.result.loss_avg, trial.result.loss_cb,
                              trial.result.resource_used, trial.resource_lease)
@@ -172,7 +179,7 @@ class OnlineTrialRunner:
                     trials_to_pause.append(trial)
                 else:
                     self.run_trial(trial)
-            # ***********Statistical test of champion*************************************
+            # ***********Statistical test of champion************************************* this guy has better than test and worse than test
             self._champion_test()
             # Pause the trial after the tests because the tests involves the reset of the trial's result
             for trial in trials_to_pause:

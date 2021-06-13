@@ -71,6 +71,12 @@ default_config_in_ChaCha: &ChaCha_config_defaults
     champion_test_policy: 'loss_ucb'
     remove_worse: True
 
+ChaChaCB:
+  is_naive: False
+  config:
+    <<: *ChaCha_config_defaults
+
+
 ChaCha:
   is_naive: False
   config:
@@ -127,7 +133,7 @@ ChaCha_wo_champion_aggressive:
   is_naive: False
   config:
     <<: *ChaCha_config_defaults
-    scheduler_args: 
+    scheduler_args:
       keep_challenger_metric: 'ucb'
       keep_challenger_ratio: null
       keep_champion: False

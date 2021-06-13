@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class Problem:
 
     def __init__(self, **kwargs):
-    self._setup_search()
+        self._setup_search()
 
     def _setup_search(self):
         self._search_space = {}
