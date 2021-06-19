@@ -3,10 +3,9 @@ import numpy as np
 import math
 from flaml.tune import Trial
 from flaml.scheduler import TrialScheduler
-
+import random
 import logging
 logger = logging.getLogger(__name__)
-
 
 class OnlineTrialRunner:
     """The OnlineTrialRunner class
@@ -161,7 +160,8 @@ class OnlineTrialRunner:
                 # as the input to the trial.train_eval_model_online function as opposed to the y_predicted.
                 # No matter what the prediction is we always feed the data
 
-                trial.train_eval_model_online(data_sample, prediction_made)
+                # we have updated the result here and report its perofmrnac to searcher. trial.result is the metric associated with the trial.
+                trial.train_eval_model_online(data_sample, prediction_made, y_predicted)
 
                 logger.debug('running trial at iter %s %s %s %s %s %s', self._total_steps,
                              trial.trial_id, trial.result.loss_avg, trial.result.loss_cb,
@@ -179,7 +179,7 @@ class OnlineTrialRunner:
                     trials_to_pause.append(trial)
                 else:
                     self.run_trial(trial)
-            # ***********Statistical test of champion************************************* this guy has better than test and worse than test
+            # ***********Statistical test of champion************************************* this has better than test and worse than test
             self._champion_test()
             # Pause the trial after the tests because the tests involves the reset of the trial's result
             for trial in trials_to_pause:

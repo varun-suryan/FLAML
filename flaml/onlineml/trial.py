@@ -85,6 +85,7 @@ class OnlineResult:
         self._sliding_window_size = sliding_window_size
         self._loss_queue = collections.deque(maxlen=self._sliding_window_size)
 
+    # potential for plugging in the estimators
     def update_result(self, new_loss, new_resource_used, data_dimension,
                       bound_of_range=1.0, new_observation_count=1.0):
         """Update result statistics
@@ -140,6 +141,7 @@ class OnlineResult:
         return sum(self._loss_queue) / len(self._loss_queue) \
             if len(self._loss_queue) != 0 else self._init_loss
 
+    # tracks score and results
     def get_score(self, score_name, cb_ratio=1):
         if 'lcb' in score_name:
             return max(self._loss_avg - cb_ratio * self._loss_cb, OnlineResult.LOSS_MIN)
@@ -241,37 +243,30 @@ class BaseOnlineTrial(Trial):
 
 class VowpalWabbitTrial(BaseOnlineTrial):
     """Implement BaseOnlineTrial for Vowpal Wabbit
-
     Attributes:
         model: the online model
         result: the anytime result for the online model
         trainable_class: the model class (set as pyvw.vw for VowpalWabbitTrial)
-
         config: the config for this trial
         trial_id: the trial_id of this trial
         min_resource_lease (float): the minimum resource realse
         status: the status of this trial
         start_time: the start time of this trial
         custom_trial_name: a custom name for this trial
-
     Methods:
         set_resource_lease(resource)
         set_status(status)
         set_checked_under_current_champion(checked_under_current_champion)
-
     NOTE:
         About result:
         1. training related results (need to be updated in the trainable class)
         2. result about resources lease (need to be updated externally)
-
         About namespaces in vw:
         - Wiki in vw:
         https://github.com/VowpalWabbit/vowpal_wabbit/wiki/Namespaces
         - Namespace vs features:
         https://stackoverflow.com/questions/28586225/in-vowpal-wabbit-what-is-the-difference-between-a-namespace-and-feature
     """
-    from vowpalwabbit import pyvw
-    MODEL_CLASS = pyvw.vw
     cost_unit = 1.0
     interactions_config_key = 'interactions'
     MIN_RES_CONST = 5
@@ -287,7 +282,6 @@ class VowpalWabbitTrial(BaseOnlineTrial):
                  cb_coef: Optional[float] = None,
                  ):
         """Constructor
-
         Args:
             config (dict): the config of the trial (note that the config is a set
                 because the hyperparameters are )
@@ -297,8 +291,12 @@ class VowpalWabbitTrial(BaseOnlineTrial):
             is_checked_under_current_champion (bool): indicates whether this trials has
                 been paused under the current champion
             trial_id (str): id of the trial (if None, it will be generated in the constructor)
-
         """
+        try:
+            from vowpalwabbit import pyvw
+        except ImportError:
+            raise ImportError(
+                'To use AutoVW, please run pip install flaml[vw] to install vowpalwabbit')
         # attributes
         self.trial_id = self._config_to_id(config) if trial_id is None else trial_id
         logger.info('Create trial with trial_id: %s', self.trial_id)
@@ -306,7 +304,7 @@ class VowpalWabbitTrial(BaseOnlineTrial):
                          custom_trial_name, self.trial_id)
         self.model = None   # model is None until the config is scheduled to run
         self.result = None
-        self.trainable_class = self.MODEL_CLASS
+        self.trainable_class = pyvw.vw
         # variables that are needed during online training
         self._metric = metric
         self._y_min_observed = None
@@ -432,7 +430,6 @@ class VowpalWabbitTrial(BaseOnlineTrial):
         """
         return float(vw_example.split('|')[0])
 
-
 class VowpalWabbitBanditTrial(BaseOnlineTrial):
     from vowpalwabbit import pyvw
     MODEL_CLASS = pyvw.vw
@@ -483,6 +480,7 @@ class VowpalWabbitBanditTrial(BaseOnlineTrial):
         self._lower_bound = -float('inf')
         self.point_estimate = 0
         self._upper_bound = float('inf')
+        self._largest_inv_importance_weight = 1
 
     @staticmethod
     def _config_to_id(config):
@@ -515,12 +513,15 @@ class VowpalWabbitBanditTrial(BaseOnlineTrial):
         namespace_feature_dim = get_ns_feature_dim_from_vw_example(vw_example)
         self._dim = self._get_dim_from_ns(namespace_feature_dim, ns_interactions)
         # construct an instance of vw model using the input config and fixed config
-        self.model = self.trainable_class(**self._vw_config)
+        args = self._vw_config['alg']
+        del self._vw_config['alg']
+        self.model = self.trainable_class(args, **self._vw_config)
+        self._vw_config['alg'] = args
         self.result = OnlineResult(self._metric,
                                    cb_coef=self._cb_coef,
                                    init_loss=0.0, init_cb=100.0, )
 
-    def train_eval_model_online(self, data_sample, y_pred):
+    def train_eval_model_online(self, data_sample, y_pred, y_pred_trial):
         """Train and eval model online
         """
         # extract info needed the first time we see the data
@@ -540,13 +541,9 @@ class VowpalWabbitBanditTrial(BaseOnlineTrial):
         # if the predicted label is correct then set cost to -1 else 0. The place for Coba.
 
         # Scale using importance weights. y_pred[1] is the q_b value.
-        if y == y_pred[0]:
-            stitched_data_sample = f'{y_pred[0]}: -1: {y_pred[1]}' + data_sample[1:]
+        reward = 1 if y == y_pred[0] else -1
+        stitched_data_sample = f'{y_pred[0]}: {-reward}: {y_pred[1]}' + data_sample[1:]
 
-        else:
-            stitched_data_sample = f'{y_pred[0]}: 1: {y_pred[1]}' + data_sample[1:]
-
-        # self.model.learn(stitched_data_sample)
         # do one step of learning
         self.model.learn(stitched_data_sample)
 
@@ -554,23 +551,26 @@ class VowpalWabbitBanditTrial(BaseOnlineTrial):
         # self.model.update(stitched_data_sample)
 
         # update training related results accordingly. Notice the indexing of y_pred because it's a tuple now.
-        new_loss = self._get_loss(y, y_pred[0], self._metric,
-                                  self._y_min_observed, self._y_max_observed)
+        fake_loss = -reward/y_pred[1] if y_pred[0] == y_pred_trial[0] else 0
+        # new_loss = train_loss / y_pred[1]
+        # initialize this variable to 1 at the beginning of time
+        self._largest_inv_importance_weight = max(1 / y_pred[1], self._largest_inv_importance_weight)
         # udpate sample size, sum of loss, and cost
         data_sample_size = 1
-        bound_of_range = self._y_max_observed - self._y_min_observed
-        if bound_of_range == 0:
-            bound_of_range = 1.0
 
-        self.result.update_result(new_loss,
+        # bound_of_loss_range = self._get_loss_range(self._y_min_observed, self._y_max_observed)
+
+        bound_of_loss_range = 2 * self._largest_inv_importance_weight
+
+        self.result.update_result(fake_loss,
                                   VowpalWabbitBanditTrial.cost_unit * data_sample_size,
-                                  self._dim, bound_of_range)
+                                  self._dim, bound_of_loss_range)
 
     def predict(self, x):
 
         """Predict using the model
         """
-
+        # TODO: Switch to using VW in cb mode not cb_explore mode
         if self.model is None:
             # initialize self.model and self.result
             self._initialize_vw_model(x)
@@ -583,10 +583,11 @@ class VowpalWabbitBanditTrial(BaseOnlineTrial):
         # normalize the probabilities
         probs /= np.sum(probs)
 
-        # sample the action from normalized probabilities
+        # sample the action from normalized probabilities. Modify it depending on num of classes.
         action = np.random.choice(2, p = probs)
 
         return action, probs[action]  # return the action which is sampled arm index and its probability
+
 
     def _get_loss(self, y_true, y_pred, loss_func_name, y_min_observed, y_max_observed):
         """Get instantaneous loss from y_true and y_pred, and loss_func_name

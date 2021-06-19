@@ -1,8 +1,8 @@
 ---
 
 supervised_10_5: &supervised_defaults
-  fixed_hp_config: 
-    alg: '--cb_explore 3'
+  fixed_hp_config:
+    alg: "--cb_explore 2 --epsilon 0.05 --quiet"
     loss_function: 'squared'
   namespace_num: 10
   max_live_model_num: 5
