@@ -18,7 +18,7 @@ LOG_TRANSFORMATION_THRESHOLD = 100
 logger = logging.getLogger(__name__)
 class DataSimulator:
     def __init__(self, iter_num, parameter=None):
-        self.Y = None 
+        self.Y = None
         self.raw_ns = ['a', 'b', 'c', 'd', 'e']
         #key is namespace id, and value is the dim of the namespace
         self.raw_ns_dic = {'a':3, 'b':3, 'c':3, 'd':3, 'e':3}
@@ -107,7 +107,7 @@ def get_data(iter_num=None, data_source='simulation', vw_format=True,
     else:
         # get openml data
         data_id = int(data_source)
-        data = OpenML2VWData(data_id, max_ns_num, 'regression') 
+        data = OpenML2VWData(data_id, max_ns_num, 'regression')
     Y = data.Y
     if vw_format:
         vw_examples = data.vw_examples

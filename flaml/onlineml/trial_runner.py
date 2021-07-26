@@ -119,7 +119,7 @@ class OnlineTrialRunner:
         """
         return self._running_trials
 
-    def step(self, data_sample=None, prediction_trial_tuple=None):
+    def step(self, data_sample=None, prediction_trial_tuple=None, label = None):
         """Schedule up to max_live_model_num trials to run
 
         Args:
@@ -152,6 +152,7 @@ class OnlineTrialRunner:
             for trial in list(self._running_trials):
                 if trial != prediction_trial:
                     y_predicted = trial.predict(data_sample)
+                # Check if it is true always
                 else:
                     y_predicted = prediction_made
 
@@ -161,7 +162,7 @@ class OnlineTrialRunner:
                 # No matter what the prediction is we always feed the data
 
                 # we have updated the result here and report its perofmrnac to searcher. trial.result is the metric associated with the trial.
-                trial.train_eval_model_online(data_sample, prediction_made, y_predicted)
+                trial.train_eval_model_online(data_sample, prediction_made, y_predicted, label)
 
                 logger.debug('running trial at iter %s %s %s %s %s %s', self._total_steps,
                              trial.trial_id, trial.result.loss_avg, trial.result.loss_cb,
@@ -435,20 +436,20 @@ class OnlineTrialRunner:
     def _worse_than_champion_test(champion_trial, trial, warmstart_num=1) -> bool:
         """Test whether the input trial is worse than the champion_trial
         """
-        if trial.result is not None and trial.result.resource_used >= warmstart_num:
+        if  trial.result and champion_trial.result is not None and champion_trial.result is not None and trial.result.resource_used >= warmstart_num:
             if trial.result.loss_lcb > champion_trial.result.loss_ucb:
                 logger.info('=========trial %s is worse than champion %s=====',
                             trial.trial_id, champion_trial.trial_id)
-                logger.info('trial %s %s %s', trial.config, trial.result, trial.resource_lease)
-                logger.info('trial loss_avg:%s, trial loss_cb %s', trial.result.loss_avg,
-                            trial.result.loss_cb)
-                logger.info('champion loss_avg:%s, champion loss_cb %s', champion_trial.result.loss_avg,
-                            champion_trial.result.loss_cb)
-                logger.info('champion %s', champion_trial.config)
-                logger.info('trial loss_avg_recent:%s, trial loss_cb %s', trial.result.loss_avg_recent,
-                            trial.result.loss_cb)
-                logger.info('champion loss_avg_recent:%s, champion loss_cb %s',
-                            champion_trial.result.loss_avg_recent, champion_trial.result.loss_cb)
+                # logger.info('trial %s %s %s', trial.config, trial.result, trial.resource_lease)
+                # logger.info('trial loss_avg:%s, trial loss_cb %s', trial.result.loss_avg,
+                #             trial.result.loss_cb)
+                # logger.info('champion loss_avg:%s, champion loss_cb %s', champion_trial.result.loss_avg,
+                #             champion_trial.result.loss_cb)
+                # logger.info('champion %s', champion_trial.config)
+                # logger.info('trial loss_avg_recent:%s, trial loss_cb %s', trial.result.loss_avg_recent,
+                #             trial.result.loss_cb)
+                # logger.info('champion loss_avg_recent:%s, champion loss_cb %s',
+                #             champion_trial.result.loss_avg_recent, champion_trial.result.loss_cb)
                 return True
         return False
 

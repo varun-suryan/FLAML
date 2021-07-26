@@ -4,6 +4,41 @@ Vanilla:
   is_naive: True
   config:
 
+ab:
+  is_naive: True
+  config:
+    q: ['ab']
+
+bc:
+  is_naive: True
+  config:
+    q: ['bc']
+
+ac:
+  is_naive: True
+  config:
+    q: ['ac']
+
+ab_bc:
+  is_naive: True
+  config:
+    q: ['ab','bc']
+
+bc_ac:
+  is_naive: True
+  config:
+    q: ['bc','ac']
+
+ab_ac:
+  is_naive: True
+  config:
+    q: ['ab','ac']
+
+ab_bc_ac:
+  is_naive: True
+  config:
+    q: ['ab','bc','ac']
+
 Offline:
   is_naive: True
   config:
@@ -49,7 +84,7 @@ Random:
     # max_live_model_num: None
     min_resource_lease: .inf
     model_select_policy: 'threshold_loss_ucb'
-    automl_runner_args: 
+    automl_runner_args:
       champion_test_policy: null
       
 Exhaustive:

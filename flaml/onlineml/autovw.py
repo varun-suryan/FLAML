@@ -1,5 +1,7 @@
 from typing import Optional, Union
 import logging
+from vowpalwabbit import pyvw
+import numpy as np
 from flaml.tune import Trial, Categorical, Float, PolynomialExpansionSet, polynomial_expansion_set
 from flaml.onlineml import OnlineTrialRunner
 from flaml.scheduler import ChaChaScheduler
@@ -11,6 +13,57 @@ logger = logging.getLogger(__name__)
 class ChaChaBandit:
     def __init__(self):
         print("Hello")
+
+class Vanilla:
+    """The AutoML class
+
+    Methods:
+        predict(data_sample)
+        learn(data  _sample)
+        AUTO
+    """
+    def helper_options_to_list_strings(self, config):
+        cmd_str_list = []
+
+        for name, config_group in config.items():
+            for (group_name, options) in config_group:
+                for option in options:
+                    temp_str = str(option)
+                    if temp_str:
+                        cmd_str_list.append(temp_str)
+
+        return cmd_str_list
+
+    def __init__(self, vw_args):
+        # alg_arg = vw_args['alg']
+        # del vw_args['alg']
+        self.model = pyvw.vw(**vw_args)
+        # observe_tmp = self.helper_options_to_list_strings(self.model.get_config())
+        # vw_args['alg'] = alg_arg
+        self._y_predicted = None
+
+    def predict(self, x):
+        """Predict on the input example (e.g., vw example)
+
+        Args:
+            data_sample (vw_example)
+        """
+        pred = self.model.predict(x)
+        # probs = np.clip(np.array(pred), a_min = 0, a_max = None)
+
+        # normalize the probabilities
+        # probs /= np.sum(probs)
+
+        # sample the action from normalized probabilities. Modify it depending on num of classes.
+        action = np.random.choice(2, p = probs) + 1
+        self._y_predicted = action, probs[action - 1]
+        return self._y_predicted  # return the action which is sampled arm index and its probability
+
+
+    def learn(self, x, label):
+        reward = 1 if self._y_predicted[0] == int(label) else -1
+        stitched_data_sample = f'{self._y_predicted[0]}:{-reward}:{self._y_predicted[1]}' + x
+        self.model.learn(stitched_data_sample)
 
 class AutoVW:
     """The AutoML class
@@ -127,13 +180,14 @@ class AutoVW:
 
     def predict(self, data_sample):
         """Predict on the input example (e.g., vw example)
-
         Args:
             data_sample (vw_example)
         """
         # Average over all the live models
         if self._trial_runner is None:
             self._setup_trial_runner(data_sample)
+
+        # TODO: Check which model is predicting
 
         # ToDO mix over all live trials
         self._best_trial = self._select_best_trial()
@@ -147,20 +201,23 @@ class AutoVW:
                         self._best_trial.result.resource_used)
         return self._y_predict
 
-    def learn(self, data_sample):
+    def learn(self, data_sample, label):
         """Perform one online learning step with the given data sample
 
         Args:
             data_sample (vw_example): one data sample on which the model gets updated
         """
+
         self._iter += 1
-        self._trial_runner.step(data_sample, (self._y_predict, self._best_trial))
+        self._trial_runner.step(data_sample, (self._y_predict, self._best_trial), label)
 
     def _select_best_trial(self):
         """Select a best trial from the running trials accoring to the _model_select_policy
         """
         best_score = float('+inf') if self._model_selection_mode == 'min' else float('-inf')
         new_best_trial = None
+        # tmp = [trial.result.get_score(self._model_select_policy) for trial in self._trial_runner.running_trials \
+        #        if trial.result is not None]
         for trial in self._trial_runner.running_trials:
             if trial.result is not None and ('threshold' not in self._model_select_policy
                                              or trial.result.resource_used >= self.WARMSTART_NUM):

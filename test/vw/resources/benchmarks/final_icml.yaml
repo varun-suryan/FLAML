@@ -1,11 +1,23 @@
 ---
-
 # save info about the tested benchmark
-
 oml_3_10:
   type: openml_classification
   dataset_id: 3
   vw_namespace_num: 10 #TODO: this is sth we can share 
+  obj_name: mse
+  shuffle: False
+
+oml_151_5:
+  type: openml_classification
+  dataset_id: 151
+  vw_namespace_num: 5 #TODO: this is sth we can share
+  obj_name: mse
+  shuffle: False
+
+oml_151_3:
+  type: openml_classification
+  dataset_id: 151
+  vw_namespace_num: 3 #TODO: this is sth we can share
   obj_name: mse
   shuffle: False
 
@@ -22,6 +34,27 @@ oml_554_10:
   vw_namespace_num: 10 #TODO: this is sth we can share
   obj_name: mse
   shuffle: False
+
+oml_1046_5:
+  type: openml_classification
+  dataset_id: 1046
+  vw_namespace_num: 5 #TODO: this is sth we can share
+  obj_name: mse
+  shuffle: False
+
+oml_1046_3:
+  type: openml_classification
+  dataset_id: 1046
+  vw_namespace_num: 3 #TODO: this is sth we can share
+  obj_name: mse
+  shuffle: False
+
+oml_4538_10:
+  type: openml_classification
+  dataset_id: 4538
+  vw_namespace_num: 10 #TODO: this is sth we can share 
+  obj_name: mse
+  shuffle: True
 
 oml_41027_10:
   type: openml_classification

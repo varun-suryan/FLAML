@@ -92,8 +92,8 @@ class ChampionFrontierSearcher(BaseSearcher):
 
     CHAMPION_TRIAL_NAME = 'champion_trial'
 
+    TRIAL_CLASS = VowpalWabbitBanditTrial
     # TRIAL_CLASS = VowpalWabbitTrial
-    TRIAL_CLASS = VowpalWabbitTrial
 
     def __init__(self,
                  init_config: Dict,

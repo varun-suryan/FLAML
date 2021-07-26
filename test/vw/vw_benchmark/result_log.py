@@ -15,7 +15,10 @@ class ResultLogRecord(object):
                  champion_config: str=None,
                  ):
         self.record_id = record_id
-        self.y_predict= float('{:.5f}'.format(float(y_predict)))
+        if type(y_predict) == int:
+            self.y_predict= float('{:.5f}'.format(float(y_predict)))
+        else:
+            self.y_predict = float('{:.5f}'.format(float(y_predict[0])))
         self.y = float('{:.5f}'.format(float(y)))
         self.loss = float('{:.5f}'.format(float(loss)))
         self.time_used = float('{:.4f}'.format(float(time_used)))

@@ -5,12 +5,49 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="58cd420f-8b9d-4271-aee9-54a17324895f" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Updates/ChaChaCB-Random/vw-ns-interaction-151_45312_5_False_True-2345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/ChaChaCB-Random/vw-ns-interaction-151_45312_5_False_True-3345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/ChaChaCB-Random/vw-ns-interaction-151_45312_5_False_True-4345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/ChaChaCB-Random/vw-ns-interaction-151_45312_5_False_True-5345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/ChaChaCB-Random/vw-ns-interaction-151_45312_5_False_True-6345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/ChaChaCB-Vanilla/vw-ns-interaction-1046_15545_5_False_True-2345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/ChaChaCB-Vanilla/vw-ns-interaction-1046_15545_5_False_True-3345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/ChaChaCB-Vanilla/vw-ns-interaction-1046_15545_5_False_True-4345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/ChaChaCB-Vanilla/vw-ns-interaction-1046_15545_5_False_True-5345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/ChaChaCB-Vanilla/vw-ns-interaction-1046_15545_5_False_True-7345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/Configs/vw-ns-interaction-151_45312_3_False_True-2345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/Configs/vw-ns-interaction-151_45312_3_False_True-3345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/Configs/vw-ns-interaction-151_45312_3_False_True-4345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/Configs/vw-ns-interaction-151_45312_3_False_True-5345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/Configs/vw-ns-interaction-151_45312_3_False_True-6345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/Exhaustive-Vanilla/vw-ns-interaction-1046_15545_5_False_True-2345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/Exhaustive-Vanilla/vw-ns-interaction-1046_15545_5_False_True-3345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/Exhaustive-Vanilla/vw-ns-interaction-1046_15545_5_False_True-4345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/Exhaustive-Vanilla/vw-ns-interaction-1046_15545_5_False_True-5345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Updates/Exhaustive-Vanilla/vw-ns-interaction-1046_15545_5_False_True-7345.pdf" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/coba" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/test/test/data/ds_42183_10_0.vw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/data/openml_vwdatasets/ds_151_10_0.vw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/data/openml_vwdatasets/ds_151_1_0.vw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-100k_1_5-1-10619-00-oml_151_10.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-100k_1_5-1-10619-01-oml_151_10.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-100k_1_5-1-10619-01-oml_41506_10.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-10k_1_5-1-10619-01-oml_151_10.json" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-5k_1_5-1-10605-18-oml_3_10.json" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-5k_1_5-1-10605-23-oml_3_10.json" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-5k_1_5-1-10606-00-oml_3_10.json" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-5k_1_5-1-10607-12-oml_3_10.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/normalized_scoresfinal_icml-5k_1_5-1-10619-01-oml_151_10.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/plots/ChaCha-Random-1046.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/plots/ChaCha-Random-151.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/plots/Vanilla-Exhaustive-1046.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/plots/Vanilla-Exhaustive-151.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/plots/vw-ns-interaction-151_45312_3_False_True-2345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/plots/vw-ns-interaction-151_45312_3_False_True-3345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/plots/vw-ns-interaction-151_45312_3_False_True-4345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/plots/vw-ns-interaction-151_45312_3_False_True-5345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/vw/vw_benchmark/result/plots/vw-ns-interaction-151_45312_3_False_True-6345.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/zero-epsilon.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.coveragerc" beforeDir="false" afterPath="$PROJECT_DIR$/.coveragerc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.flake8" beforeDir="false" afterPath="$PROJECT_DIR$/.flake8" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.github/workflows/python-package.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/python-package.yml" afterDir="false" />
@@ -109,6 +146,48 @@
     </key>
   </component>
   <component name="RunManager" selected="Python.test.vw.run_autovw">
+    <configuration name="Coba" type="PythonConfigurationType" factoryName="Python">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Anaconda\envs\autoML\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/coba/examples" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/coba/examples/bakeoff.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Unnamed" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="run_autovw" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -172,6 +251,27 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="test.vw.run_autovw Cha" type="PythonConfigurationType" factoryName="Python">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="C:\Anaconda\envs\autoML\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
+      <option name="SCRIPT_NAME" value="test.vw.run_autovw" />
+      <option name="PARAMETERS" value="final_icml 50k_1_5 -m ChaChaCB -seed 0 -rerun  -log -d oml_151_3" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="true" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="test.vw.run_autovw" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -185,7 +285,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="" />
       <option name="SCRIPT_NAME" value="test.vw.run_autovw" />
-      <option name="PARAMETERS" value="final_icml 100k_1_5 -m ChaChaCB  -seed 0  -rerun  -log -d oml_151_10" />
+      <option name="PARAMETERS" value="final_icml 50k_1_5 -m Vanilla ab bc ac ab_bc bc_ac ab_ac ab_bc_ac -seed 0 -rerun  -log -d oml_151_3" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="true" />
@@ -215,6 +315,9 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Python.Coba" />
+      <item itemvalue="Python.Unnamed" />
+      <item itemvalue="Python.test.vw.run_autovw Cha" />
       <item itemvalue="Python.test.vw.run_autovw" />
       <item itemvalue="Python.run_autovw" />
       <item itemvalue="Python.test_learners" />

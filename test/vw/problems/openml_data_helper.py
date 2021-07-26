@@ -157,7 +157,7 @@ def get_oml_to_vw(did, max_ns_num, ds_dir=VW_DS_DIR):
 
     print('target=ds.default_target_attribute', target_attribute)
     data = ds.get_data(target=target_attribute, dataset_format='array')
-    X, y = data[0], data[1] # return X: pd DataFrame, y: pd series
+    X, y = data[0], data[1] + 1 # return X: pd DataFrame, y: pd series
     import scipy
     if scipy.sparse.issparse(X):
         X = scipy.sparse.csr_matrix.toarray(X)
@@ -169,7 +169,7 @@ def get_oml_to_vw(did, max_ns_num, ds_dir=VW_DS_DIR):
     else:
         print('---failed to convert/save oml dataset to vw!!!----')
     try:
-        X, y = data[0], data[1] # return X: pd DataFrame, y: pd series
+        X, y = data[0], data[1] + 1 # return X: pd DataFrame, y: pd series
         if data and isinstance(X, np.ndarray):
             print('-----converting oml to vw and and saving oml dataset-------')
             save_vw_dataset_w_ns(X, y, did, ds_dir, max_ns_num, is_regression = True)

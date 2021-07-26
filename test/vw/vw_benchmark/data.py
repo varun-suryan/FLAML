@@ -89,7 +89,7 @@ class DataSimulator:
         for i, x_dic in enumerate(self.vw_x_dic_list):
             raw_vw_example = str(self.Y[i]) + ' '
             for ns, ns_x in x_dic.items():
-                raw_vw_example = raw_vw_example + '|' + str(ns) + ' ' + ' '.join([str(s) for s in ns_x]) + ' '
+                raw_vw_example = raw_vw_example + ' |' + str(ns) + ' ' + ' '.join([str(s) for s in ns_x]) + ' '
             # pyvw_example = pyvw.example(raw_vw_example)
             # print(raw_vw_example)
             self.vw_examples.append(raw_vw_example)

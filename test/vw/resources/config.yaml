@@ -6,4 +6,4 @@ input_dir: ~/.openml/cache            # where the datasets are loaded by default
 output_dir: results                   # where logs and results are saved by default.
 # run_random_seeds: [2345, 4567, 8666, 2468, 9999]
 run_random_seeds: [2345, 3345, 4345, 5345, 6345, 7345]
-name_space_num: 10
+name_space_num: 5

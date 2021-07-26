@@ -81,7 +81,7 @@ class VWNSInteractionTuning(VWTuning):
         self._init_config = self._fixed_hp_config.copy()
         search_space = {'interactions': polynomial_expansion_set(
                                                        init_monomials=set(self._raw_namespaces),
-                                                       highest_poly_order=len(self._raw_namespaces),
+                                                       highest_poly_order=2,
                                                        allow_self_inter=False),
                         }
         init_config = {'interactions': set()}

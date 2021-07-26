@@ -1,7 +1,7 @@
 from flaml.searcher import CFO, BlendSearch, FLOW2, BlendSearchTuner
 from flaml.automl import AutoML, logger_formatter
 try:
-    from flaml.onlineml.autovw import AutoVW
+    from flaml.onlineml.autovw import AutoVW, Vanilla
 except ImportError:
     # print('need to install vowpalwabbit to use AutoVW')
     pass

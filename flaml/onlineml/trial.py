@@ -83,7 +83,7 @@ class OnlineResult:
         self._cb_coef = cb_coef if cb_coef is not None else self.CB_COEF
         # optional statistics
         self._sliding_window_size = sliding_window_size
-        self._loss_queue = collections.deque(maxlen=self._sliding_window_size)
+        self._loss_queue = collections.deque(maxlen = self._sliding_window_size)
 
     # potential for plugging in the estimators
     def update_result(self, new_loss, new_resource_used, data_dimension,
@@ -500,6 +500,18 @@ class VowpalWabbitBanditTrial(BaseOnlineTrial):
             config_id_full = config_id_full + config_id
         return config_id_full
 
+    def helper_options_to_list_strings(self, config):
+        cmd_str_list = []
+
+        for name, config_group in config.items():
+            for (group_name, options) in config_group:
+                for option in options:
+                    temp_str = str(option)
+                    if temp_str:
+                        cmd_str_list.append(temp_str)
+
+        return cmd_str_list
+
     def _initialize_vw_model(self, vw_example):
         """Initialize a vw model using the trainable_class
         """
@@ -513,44 +525,47 @@ class VowpalWabbitBanditTrial(BaseOnlineTrial):
         namespace_feature_dim = get_ns_feature_dim_from_vw_example(vw_example)
         self._dim = self._get_dim_from_ns(namespace_feature_dim, ns_interactions)
         # construct an instance of vw model using the input config and fixed config
-        args = self._vw_config['alg']
-        del self._vw_config['alg']
-        self.model = self.trainable_class(args, **self._vw_config)
-        self._vw_config['alg'] = args
+        # args = self._vw_config['alg']
+        # del self._vw_config['alg']
+        self.model = self.trainable_class(**self._vw_config)
+        # observe_tmp = self.helper_options_to_list_strings(self.model.get_config())
+        # self._vw_config['alg'] = args
         self.result = OnlineResult(self._metric,
                                    cb_coef=self._cb_coef,
                                    init_loss=0.0, init_cb=100.0, )
 
-    def train_eval_model_online(self, data_sample, y_pred, y_pred_trial):
+    def train_eval_model_online(self, data_sample, y_pred, y_pred_trial, label):
         """Train and eval model online
         """
         # extract info needed the first time we see the data
         if self._resource_lease == 'auto' or self._resource_lease is None:
             assert self._dim is not None
             self._resource_lease = self._dim * self.MIN_RES_CONST
-        y = self._get_y_from_vw_example(data_sample)
 
+        # Converting the string label into int
+        y = int(label)
         # to update the running minimum y value and max y value
         self._update_y_range(y)
-
         if self.model is None:
             # initialize self.model and self.result
             self._initialize_vw_model(data_sample)
-
         # Introduce IPS here to continue the things running
         # if the predicted label is correct then set cost to -1 else 0. The place for Coba.
-
         # Scale using importance weights. y_pred[1] is the q_b value.
         reward = 1 if y == y_pred[0] else -1
-        stitched_data_sample = f'{y_pred[0]}: {-reward}: {y_pred[1]}' + data_sample[1:]
+        stitched_data_sample = f'{y_pred[0]}:{-reward}:{y_pred[1]}' + data_sample
 
         # do one step of learning
+        #### dive a bit more here
         self.model.learn(stitched_data_sample)
 
         # Update the CIs of the current model
         # self.model.update(stitched_data_sample)
 
         # update training related results accordingly. Notice the indexing of y_pred because it's a tuple now.
+        # doubt if 0 is a correct value of fake loss
+
+        ##### dive a bit more into here
         fake_loss = -reward/y_pred[1] if y_pred[0] == y_pred_trial[0] else 0
         # new_loss = train_loss / y_pred[1]
         # initialize this variable to 1 at the beginning of time
@@ -560,6 +575,7 @@ class VowpalWabbitBanditTrial(BaseOnlineTrial):
 
         # bound_of_loss_range = self._get_loss_range(self._y_min_observed, self._y_max_observed)
 
+        # since labels are 0 and 1
         bound_of_loss_range = 2 * self._largest_inv_importance_weight
 
         self.result.update_result(fake_loss,
@@ -567,7 +583,6 @@ class VowpalWabbitBanditTrial(BaseOnlineTrial):
                                   self._dim, bound_of_loss_range)
 
     def predict(self, x):
-
         """Predict using the model
         """
         # TODO: Switch to using VW in cb mode not cb_explore mode
@@ -577,16 +592,15 @@ class VowpalWabbitBanditTrial(BaseOnlineTrial):
 
         # returns array of x probabilities one for every arm. x is the number of arms
         pred = self.model.predict(x)
-
         probs = np.clip(np.array(pred), a_min = 0, a_max = None)
 
         # normalize the probabilities
         probs /= np.sum(probs)
 
         # sample the action from normalized probabilities. Modify it depending on num of classes.
-        action = np.random.choice(2, p = probs)
+        action = np.random.choice(2, p = probs) + 1
 
-        return action, probs[action]  # return the action which is sampled arm index and its probability
+        return action, probs[action - 1]  # return the action which is sampled arm index and its probability
 
 
     def _get_loss(self, y_true, y_pred, loss_func_name, y_min_observed, y_max_observed):

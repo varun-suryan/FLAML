@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 import os
 from vowpalwabbit import pyvw
-from flaml import AutoVW
+from flaml import AutoVW, Vanilla
 from sklearn.metrics import mean_squared_error, mean_absolute_error, zero_one_loss
 from .vw_benchmark.config import LOG_DIR, PLOT_DIR, MAIN_RES_LOG_DIR, RESOURCE_DIR
 from .vw_benchmark.config import AGGREGATE_RES_DIR, DATA_LOG_DIR, VW_DS_DIR
@@ -16,7 +16,7 @@ from .vw_benchmark.vw_utils import get_y_from_vw_example
 from .vw_benchmark.vw_utils import get_ns_feature_dim_from_vw_example
 from .vw_benchmark.utils import plot_progressive_loss
 from .problems.vw_online_regression_problem import VWTuning, VWNSInteractionTuning, VW_NS_LR
-
+from matplotlib import pyplot as plt
 logger = logging.getLogger(__name__)
 
 
@@ -39,11 +39,18 @@ def extract_method_name_from_alg_name(alg_name, is_nslr=False):
 
 def get_loss(y_pred, y_true, loss_func='squared'):
     if 'squared' in loss_func:
-        loss = mean_squared_error([y_pred[0]], [y_true])
+        # if-else clauses change made to account for vanilla and ChaCha predict output format.
+        if type(y_pred) == int:
+            loss = mean_squared_error([y_pred], [y_true])
+        else:
+            loss = mean_squared_error([y_pred[0]], [y_true])
     elif 'absolute' in loss_func:
-        loss = mean_absolute_error([y_pred[0]], [y_true])
+        loss = mean_absolute_error([y_pred], [y_true])
     elif 'zero_one' in loss_func:
-        loss = zero_one_loss([y_pred[0]], [y_true])
+        if type(y_pred) == int:
+            loss = zero_one_loss([y_pred], [y_true])
+        else:
+            loss = zero_one_loss([y_pred[0]], [y_true])
     else:
         loss = None
         raise NotImplementedError
@@ -77,37 +84,43 @@ def online_learning_loop(iter_num, vw_examples, Y, vw_alg, loss_func,
                                  method_name=method_name)
     result_log.open()
     loss_list = []
-    y_predict_list = []
+    # y_predict_list = []
     old_champion = ''
     champion_detection_iter = []
     for i in range(iter_num):
+
         start_time = time.time()
         vw_x = vw_examples[i]
         y_true = get_y_from_vw_example(vw_x)
-        # predict step
-        y_pred = vw_alg.predict(vw_x)
-        # learn step
-        # vw_alg.learn(vw_x)
-        if 'Offline' not in method_name or (i<0.2*iter_num):
-            vw_alg.learn(vw_x)
 
+        y_pred = vw_alg.predict(vw_x[1:])
+        # do the argmax
+
+        vw_alg.learn(vw_x[1:], vw_x[0])
+        # if 'Offline' not in method_name or (i<0.2*iter_num):
+        #     vw_alg.learn(vw_x)
+        # logger.info(y_pred)
         if demo_champion_detection and hasattr(vw_alg, 'get_champion_id'):
             champion_id = vw_alg.get_champion_id()
             if champion_id != old_champion:
                 champion_detection_iter.append(i)
                 old_champion = champion_id
         # calculate one step loss
+
         loss = get_loss(y_pred, y_true, loss_func)
         loss_list.append(loss)
-        y_predict_list.append([y_pred, y_true])
+        # y_predict_list.append([y_pred, y_true])
         # save results for regression. Commenting now for the classification case.
-        result_log.append(record_id=i, y_predict=y_pred[0], y=y_true, loss=loss,
+        result_log.append(record_id=i, y_predict=y_pred, y=y_true, loss=loss,
                           time_used=time.time() - start_time,
                           incumbent_config=None,
                           champion_config=None)
     result_log.close()
-    return loss_list, champion_detection_iter
 
+    # to plot the data
+    # plt.plot(np.divide(np.cumsum(loss_list), np.array(range(1, len(loss_list) + 1))))
+    # plt.show()
+    return loss_list, champion_detection_iter
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -154,11 +167,11 @@ if __name__ == '__main__':
 
     # **********parse method config, exp config, and dataset info from yaml files****
     # file_constraints = open(RESOURCE_DIR + 'exp_config.yaml', 'r', encoding="utf-8")
-    basic_config_info = yaml.load(open(RESOURCE_DIR + 'config.yaml', 'r', encoding="utf-8"))
-    benchmark_info = yaml.load(open(RESOURCE_DIR + 'benchmarks/' + args.benchmark + '.yaml',
+    basic_config_info = yaml.safe_load(open(RESOURCE_DIR + 'config.yaml', 'r', encoding="utf-8"))
+    benchmark_info = yaml.safe_load(open(RESOURCE_DIR + 'benchmarks/' + args.benchmark + '.yaml',
                                     'r', encoding="utf-8"))
-    method_data = yaml.load(open(RESOURCE_DIR + 'methods.yaml', 'r', encoding="utf-8"))
-    current_exp_config = yaml.load(open(RESOURCE_DIR + 'exp_config.yaml', 'r',
+    method_data = yaml.safe_load(open(RESOURCE_DIR + 'methods.yaml', 'r', encoding="utf-8"))
+    current_exp_config = yaml.safe_load(open(RESOURCE_DIR + 'exp_config.yaml', 'r',
                                         encoding="utf-8"))[args.exp_config]
 
     # get the list of dataset from yaml
@@ -169,6 +182,7 @@ if __name__ == '__main__':
     iter_num = current_exp_config['max_sample_num']
     # setup alg configs
     random_seed_list = [basic_config_info['run_random_seeds'][i] for i in args.seed_index]
+    print(random_seed_list)
     log_sig = '_'.join([args.benchmark] + [args.exp_config] + args.dataset_list
                        + args.method_list + [str(i) for i in args.seed_index])
    
@@ -225,7 +239,7 @@ if __name__ == '__main__':
                     if 'is_naive' not in alg_args or not alg_args['is_naive']:
                         autovw_args = auto_alg_common_args.copy()
                         autovw_args.update(alg_args['config'])
-                        # use the method_name+current_exp_config as the alias for the algorithm
+                        # use the method_name+current_exp_config as the aliasfor the algorithm
                         logger.info('alg_alias %s %s', alg_alias, alg_args)
                         logger.info('trial runner config %s %s', alg_args['config'], autovw_args)
                         alg_dic[alg_alias] = AutoVW(**autovw_args)
@@ -233,7 +247,12 @@ if __name__ == '__main__':
                         vw_args = current_exp_config['fixed_hp_config'].copy()
                         if 'config' in alg_args and alg_args['config'] is not None:
                             vw_args.update(alg_args['config'])
-                        alg_dic[alg_alias] = pyvw.vw(**vw_args)
+                        # alg_arg = vw_args['alg']
+                        # del vw_args['alg']
+                        # alg_dic[alg_alias] = pyvw.vw(alg_arg, **vw_args)
+                        # vw_args['alg'] = alg_arg
+
+                        alg_dic[alg_alias] = Vanilla(vw_args)
                 else:
                     print('alg name not in methods.yaml')
                     NotImplementedError
@@ -265,7 +284,7 @@ if __name__ == '__main__':
                     logger.info('---------------Start running %s on dataset %s--------------', alg_name, dataset)
                     cumulative_loss_list, champion_detection = online_learning_loop(
                         max_iter_num, vw_online_aml_problem.vw_examples, vw_online_aml_problem.Y, alg,
-                        loss_func=current_exp_config['fixed_hp_config']['loss_function'],
+                        loss_func=current_exp_config['loss_function_plot'],
                         method_name=alg_name, result_file_address=result_file_address,
                         demo_champion_detection=args.demo_champion)
                     logger.critical('%ss running time: %s, total iter num is %s',
